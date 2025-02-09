@@ -1,0 +1,6 @@
+Asteroids Final
+-------------------------------------------------------------------------------------------------
+In the Spring of 2022, I attended a game design course where I learned C#. 
+Throughout my coursework, I slowly iterated on a game, which was eventually submitted as my final.
+My professor gave instructions for a specific type of game, but the creation and implementation of the majority of the code is my own.
+The game implements player controls, screen wrapping, and attacking mechanics to recieve and deliver damage to enemies.
