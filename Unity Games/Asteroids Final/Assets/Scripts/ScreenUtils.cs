@@ -84,6 +84,7 @@ public static class ScreenUtils
     /// </summary>
     public static void Initialize()
     {
+        float offset = 0.5f;
         // save to support resolution changes
         screenWidth = Screen.width;
         screenHeight = Screen.height;
@@ -97,10 +98,10 @@ public static class ScreenUtils
             Camera.main.ScreenToWorldPoint(lowerLeftCornerScreen);
         Vector3 upperRightCornerWorld =
             Camera.main.ScreenToWorldPoint(upperRightCornerScreen);
-        screenLeft = lowerLeftCornerWorld.x;
-        screenRight = upperRightCornerWorld.x;
-        screenTop = upperRightCornerWorld.y;
-        screenBottom = lowerLeftCornerWorld.y;
+        screenLeft = lowerLeftCornerWorld.x + offset;
+        screenRight = upperRightCornerWorld.x - offset;
+        screenTop = upperRightCornerWorld.y - offset;
+        screenBottom = lowerLeftCornerWorld.y + offset;
     }
 
     /// <summary>

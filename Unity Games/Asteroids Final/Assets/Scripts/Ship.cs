@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 /// <summary>
@@ -11,7 +12,6 @@ public class Ship : MonoBehaviour
     GameObject bulletPrefab;
     [SerializeField]
     GameObject HUD;
-
     Rigidbody2D rb2d;
     Vector2 thrustDirection;
 
@@ -94,6 +94,10 @@ public class Ship : MonoBehaviour
             // play sound and destory ship
             AudioManager.Play(AudioClipName.PlayerDeath);
             Destroy(gameObject);
+
+            // game over
+            GameOver.Instance.GameOverScreen();
+
         }
     }
 }

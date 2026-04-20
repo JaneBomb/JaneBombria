@@ -1,0 +1,14 @@
+Asteroids Final
+-------------------------------------------------------------------------------------------------
+In the Spring of 2022, I attended a game design course where I learned Unity C#. 
+Throughout my coursework, I slowly iterated on a game, which was eventually submitted as my final.
+My professor gave instructions for a specific type of game, but the creation and implementation of the majority of the code is my own.
+The game implements player controls, screen wrapping, and attacking mechanics to receive and deliver damage to enemies.
+
+A few years after in 2026, I revisited the game with my improved knowledge in Unity. For quality of life, I added a title screen and game over screen, for a better user experience.
+-------------------------------------------------------------------------------------------------
+GDD 3080 - Final Project
+-------------------------------------------------------------------------------------------------
+In the Fall of 2025, I enrolled in another game design course, this one specializing in UI design.
+In this class I was given a task list for a game, and given free-range to implement it however I see fit. As a result I created a time management game inspired by a Japanese song called "Oninoinumani" or "White the Demon is Away" by Hanyuu Maigo. All the art assets were hand-made by myself, along with a majority of the code. Most of the unfamiliar features I implemented were created with the aid of YouTube tutorials.
+This was the most ambitious project I created while in the UCCS game dev course. My strongest area is art, so I spent a lot of time creating the aesthetic and artwork for the game. I also implemented all the code myself, with the help of tutorials. As a result, it can be said that this project was made almost entirely by myself.

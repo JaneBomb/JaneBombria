@@ -1,7 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using TMPro;
 
 /// <summary>
 /// Counts how many seconds survived
@@ -9,10 +7,8 @@ using UnityEngine;
 public class HUD : MonoBehaviour
 {
     [SerializeField]
-    TextMeshProUGUI TextMeshProUGUI;
-
+    private TextMeshProUGUI TextMeshProUGUI;
     bool currentlyPlaying = true;
-
     float elapsedTime = 0;
 
     /// <summary>
