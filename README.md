@@ -14,4 +14,5 @@ On the game development side, I am mainly and artist. I am capable of illustrati
 ## Contact
 If you wish to contact me, please use the options below.
 
-Email:  janesdaze@gmail.com
+Email:  jbombria@uccs.edu  
+Phone:  719-421-0990 (Text preferred)
