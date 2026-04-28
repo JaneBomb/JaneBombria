@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/janebombria/GitHub/JaneBombria/C/Bombria_ITER03'
+relocations:     []
+...

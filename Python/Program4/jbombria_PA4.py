@@ -107,8 +107,8 @@ print("----------------------------------------------")
 print()
 
 # print linear equation
-x = round(float(finalMat[1]), 2)
-y = round(float(finalMat[0]), 2)
+x = round(float(finalMat[1][0]), 2)
+y = round(float(finalMat[0][0]), 2)
 print("---------------LINEAR EQUATION-----------------")
 print("y = %.1fx + %.1f" % (x, y))
 print("-----------------------------------------------")
