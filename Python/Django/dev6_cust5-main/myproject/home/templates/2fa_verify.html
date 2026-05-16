@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BearEstate: Verify it's you</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#e8f4f8; font-family:'DM Sans',sans-serif; margin:0; }
+        .card { background:white; border-radius:18px; padding:36px 44px; max-width:440px; width:100%; box-shadow:0 18px 55px rgba(30,90,120,0.12); }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:1.85rem; margin:0 0 6px; color:#1a3a55; }
+        .sub { color:#6b8899; font-size:.9rem; line-height:1.55; margin-bottom:24px; }
+        .otp-row { display:flex; gap:9px; margin-top:8px; }
+        input[type="text"] { flex:1; padding:11px 14px; border:1.5px solid #cde8f0; border-radius:8px; font-size:1.3rem; letter-spacing:.3em; color:#1a3a55; text-align:center; outline:none; transition:border-color .2s; }
+        input[type="text"]:focus { border-color:#1a7a8a; }
+        .btn { padding:11px 20px; background:#1a7a8a; color:white; border:none; border-radius:8px; font-size:.92rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+        .btn:hover { background:#145f6e; }
+        .btn-full { width:100%; padding:13px; font-size:.95rem; margin-top:6px; }
+        .btn-outline { background:white; color:#1a7a8a; border:1.5px solid #1a7a8a; }
+        .btn-outline:hover { background:#f0fafc; }
+        .notice { background:#f0fafc; border:1.5px solid #5dd1e3; border-radius:9px; padding:12px 16px; font-size:.85rem; color:#1a7a8a; margin:10px 0; }
+        .error { color:#c0392b; font-size:.85rem; margin-top:10px; }
+        .skip { display:block; text-align:center; margin-top:20px; font-size:.8rem; color:#6b8899; }
+        .skip a { color:#1a7a8a; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>Verify it's you</h1>
+
+    {% if method == 'totp' %}
+        <p class="sub">Open your authenticator app and enter the 6-digit code for BearEstate.</p>
+        <form method="post" action="{% url '2fa_verify_login' %}">
+            {% csrf_token %}
+            <div class="otp-row">
+                <input type="text" name="otp_code" maxlength="6" inputmode="numeric"
+                       autocomplete="one-time-code" placeholder="000000" autofocus required>
+                <button type="submit" class="btn">Verify →</button>
+            </div>
+            {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        </form>
+    {% else %}
+        <p class="sub">We'll email a 6-digit code to <b>{{ masked_email|default:"your email" }}</b>.</p>
+
+        {% if not email_sent %}
+            <form method="post" action="{% url '2fa_verify_login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="email_send">
+                <button type="submit" class="btn btn-full">Send code →</button>
+            </form>
+        {% else %}
+            <div class="notice">✉️  Code sent. It expires in 5 minutes! check your inbox.</div>
+            <form method="post" action="{% url '2fa_verify_login' %}">
+                {% csrf_token %}
+                <div class="otp-row">
+                    <input type="text" name="email_code" maxlength="6" inputmode="numeric"
+                           autocomplete="one-time-code" placeholder="000000" autofocus required>
+                    <button type="submit" class="btn">Verify →</button>
+                </div>
+            </form>
+            <form method="post" action="{% url '2fa_verify_login' %}" style="margin-top:8px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="email_send">
+                <button type="submit" class="btn btn-outline btn-full">Resend code</button>
+            </form>
+        {% endif %}
+
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    {% endif %}
+
+    <span class="skip"><a href="{% url 'bear_estate_homepage' %}">Cancel and return to login</a></span>
+</div>
+</body>
+</html>

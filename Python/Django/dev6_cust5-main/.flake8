@@ -1,0 +1,19 @@
+#set the base flake8 rules for this repository
+[flake8]
+
+#set a more reasonable line length so the linter is not overly strict
+max-line-length = 120
+
+#skip folders and files that should not be linted
+exclude =
+    .git,
+    __pycache__,
+    myproject/staticfiles,
+    */migrations/*
+
+#ignore comment-spacing because this repo uses comment styling without a space after the hash
+ignore =
+    E265
+    W503
+    E402
+

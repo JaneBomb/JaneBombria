@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+  <main style="max-width: 760px; margin: 40px auto; padding: 24px;">
+    <h1>{{ title }}</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Save Advertisement</button>
+      <a href="{% url 'agent_ad_list' %}">Cancel</a>
+    </form>
+  </main>
+</body>
+</html>

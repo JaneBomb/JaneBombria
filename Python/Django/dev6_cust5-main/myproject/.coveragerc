@@ -1,0 +1,9 @@
+[run]
+source = home
+omit =
+    */migrations/*
+    */tests*
+    manage.py
+
+[report]
+fail_under = 80

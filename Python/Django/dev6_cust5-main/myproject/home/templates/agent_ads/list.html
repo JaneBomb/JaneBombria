@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Agent Ads</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+  <main style="max-width: 900px; margin: 40px auto; padding: 24px;">
+    <h1>My Agent Advertisements</h1>
+
+    <p>
+      <a href="{% url 'agent_ad_create' %}">Create a new ad</a>
+    </p>
+
+    {% for ad in ads %}
+      <section style="border:1px solid #ddd; padding:16px; margin-bottom:16px; border-radius:10px;">
+        <h2>{{ ad.headline }}</h2>
+        <p>{{ ad.city }}, {{ ad.state }} · {{ ad.brokerage }}</p>
+        <p>Status: {% if ad.active %}Active{% else %}Inactive{% endif %}</p>
+
+        <a href="{% url 'agent_profile' ad.id %}">View public profile</a> |
+        <a href="{% url 'agent_ad_edit' ad.id %}">Edit</a>
+
+        {% if ad.active %}
+          <form method="post" action="{% url 'agent_ad_deactivate' ad.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Deactivate</button>
+          </form>
+        {% endif %}
+      </section>
+    {% empty %}
+      <p>You have not created any ads yet.</p>
+    {% endfor %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home — BearEstate{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* ── Live Feed Section ──────────────────────────────────────────── */
+        .live-feed-section {
+            background: #f0f8ff;
+            padding: 60px 3rem 70px;
+            border-top: 1.5px solid rgba(93,209,227,0.2);
+        }
+
+        .live-feed-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .live-feed-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Pulsing live badge */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(26,122,138,0.1);
+            border: 1px solid rgba(26,122,138,0.25);
+            color: var(--teal-dark);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-left: 14px;
+            vertical-align: middle;
+        }
+
+        .live-badge::before {
+            content: "";
+            display: block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #1a7a8a;
+            animation: livePulse 1.6s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.35; transform: scale(0.75); }
+        }
+
+        .live-feed-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Feed tab list ──────────────────────────────────────────────── */
+        .feed-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ── Individual feed tab/row ────────────────────────────────────── */
+        .feed-tab {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(93,209,227,0.22);
+            border-radius: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+
+            /* Slide-in for new arrivals */
+            animation: feedSlideIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        .feed-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(26,122,138,0.13);
+            border-color: rgba(26,122,138,0.35);
+        }
+
+        .feed-tab.feed-new {
+            border-color: rgba(93,209,227,0.55);
+            box-shadow: 0 0 0 3px rgba(93,209,227,0.15);
+        }
+
+        @keyframes feedSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Avatar bubble ──────────────────────────────────────────────── */
+        .feed-avatar {
+            flex-shrink: 0;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(93,209,227,0.4);
+            background: linear-gradient(135deg, rgba(93,209,227,0.25), rgba(26,122,138,0.35));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--teal-dark);
+            overflow: hidden;
+        }
+
+        .feed-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ── Text columns ───────────────────────────────────────────────── */
+        .feed-info {
+            flex: 1;
+            min-width: 0; /* allow text truncation */
+        }
+
+        .feed-name {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .feed-location {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .feed-location::before {
+            content: "📍";
+            font-size: 0.7rem;
+        }
+
+        .feed-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-top: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ── Right-side stats ───────────────────────────────────────────── */
+        .feed-stats {
+            flex-shrink: 0;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .feed-rent {
+            font-family: var(--font-display);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--teal-dark);
+        }
+
+        .feed-rent span {
+            font-family: var(--font-body, 'DM Sans', sans-serif);
+            font-size: 0.72rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .feed-type-badge {
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: rgba(26,122,138,0.1);
+            color: var(--teal-dark);
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+
+        .feed-date {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Arrow chevron ──────────────────────────────────────────────── */
+        .feed-arrow {
+            flex-shrink: 0;
+            color: rgba(26,122,138,0.4);
+            font-size: 1.1rem;
+            margin-left: 8px;
+            transition: transform 0.2s, color 0.2s;
+        }
+
+        .feed-tab:hover .feed-arrow {
+            transform: translateX(4px);
+            color: var(--teal-dark);
+        }
+
+        /* ── Empty / loading states ─────────────────────────────────────── */
+        .feed-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .feed-skeleton {
+            height: 84px;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #e8f4f8 25%, #d4ecf4 50%, #e8f4f8 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Connection status pill ─────────────────────────────────────── */
+        .feed-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.04);
+            transition: all 0.3s;
+        }
+
+        .feed-status.connected   { color: #1a7a8a; background: rgba(26,122,138,0.08); }
+        .feed-status.error       { color: #c0392b; background: rgba(192,57,43,0.08); }
+
+        .feed-status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ── "Show more" link ───────────────────────────────────────────── */
+        .feed-more-link {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--teal-dark);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid var(--teal-dark);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- Flash Messages -->
+    {% if messages %}
+        <div data-flash style="position:fixed; top:1rem; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; align-items:center;">
+            {% for message in messages %}
+                <div style="background:#fff3cd; color:#856404; border:1px solid #ffc107; padding:0.75rem 1.5rem; border-radius:10px; font-size:0.9rem; box-shadow:0 4px 14px rgba(0,0,0,0.1);">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Hero Section -->
+    <section class="hero hero-bg">
+        <img
+            src="{% static 'images/bear.png' %}"
+            alt=""
+            style="position: absolute; top: -22px; left: 28%; transform: translateX(-50%); width: 250px; z-index: 10; padding-bottom: 20px;"
+            aria-hidden="true"
+            data-darkreader-ignore
+        >
+        <img
+            src="{% static 'images/college_snow.jpg' %}"
+            alt=""
+            class="hero-bg-img"
+            aria-hidden="true"
+            data-darkreader-ignore
+        >
+
+        <div class="hero-grid">
+            <div class="hero-inner">
+
+                <p class="eyebrow">Built for Students</p>
+                <p class="hero-sub">Find housing. Post subleases.<br>Message roommates directly.</p>
+
+                <p class="hero-tagline">College Housing Network — Nationwide</p>
+
+                <!-- Mini Stats -->
+                <div class="mini-stats">
+                    <div class="mstat"><strong>50 States</strong><span>Nationwide Coverage</span></div>
+                    <div class="mstat-dot"></div>
+                    <div class="mstat"><strong>Live Chat</strong><span>Direct Messaging</span></div>
+                </div>
+
+                <!-- Search Bar -->
+                <form class="search-bar" method="get" role="search" aria-label="Housing search">
+                    <div class="search-field">
+                        <label for="searchLocation">Location</label>
+                        <input
+                            id="searchLocation"
+                            name="location"
+                            type="text"
+                            placeholder="City, State"
+                            value="{{ selected_location }}"
+                        >
+                    </div>
+
+                    <div class="search-divider"></div>
+
+                    <div class="search-field">
+                        <label for="searchKeyword">Keyword</label>
+                        <input
+                            id="searchKeyword"
+                            name="q"
+                            type="text"
+                            placeholder="e.g. furnished, near campus..."
+                            value="{{ request.GET.q }}"
+                        >
+                    </div>
+
+                    <div class="search-divider"></div>
+
+                    <div class="search-field">
+                        <label for="searchIntent">Looking to</label>
+                        <select id="searchIntent" name="intent">
+                            <option value="rent" {% if selected_intent != "buy" %}selected{% endif %}>Rent</option>
+                            <option value="buy"  {% if selected_intent == "buy" %}selected{% endif %}>Buy</option>
+                        </select>
+                    </div>
+
+                    <div class="search-divider"></div>
+
+                    <div class="search-field">
+                        <label for="searchType">Type</label>
+                        <select id="searchType" name="type">
+                            <option value="" {% if not selected_type %}selected{% endif %}>Any Type</option>
+                            <option value="house"      {% if selected_type == "house"      %}selected{% endif %}>House</option>
+                            <option value="apartment"  {% if selected_type == "apartment"  %}selected{% endif %}>Apartment</option>
+                            <option value="condo"      {% if selected_type == "condo"      %}selected{% endif %}>Condo</option>
+                            <option value="townhouse"  {% if selected_type == "townhouse"  %}selected{% endif %}>Townhouse</option>
+                        </select>
+                    </div>
+
+                    <div class="search-divider"></div>
+
+                    <div class="search-field">
+                        <label for="searchBudget" id="budgetLabel">Monthly Rent</label>
+                        <select id="searchBudget" name="budget">
+                            <option value="any"          {% if selected_budget == "any" or not selected_budget %}selected{% endif %}>Any Rent</option>
+                            <option value="0-900"        {% if selected_budget == "0-900"        %}selected{% endif %}>Under $900</option>
+                            <option value="900-1400"     {% if selected_budget == "900-1400"     %}selected{% endif %}>$900 – $1,400</option>
+                            <option value="1400-2000"    {% if selected_budget == "1400-2000"    %}selected{% endif %}>$1,400 – $2,000</option>
+                            <option value="2000-999999"  {% if selected_budget == "2000-999999"  %}selected{% endif %}>$2,000+</option>
+                        </select>
+                    </div>
+
+                    <div class="search-divider"></div>
+                    <div class="search-btn-wrapper">
+                        <button class="search-btn" id="searchBtn" type="submit">Search →</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Student Features -->
+    <section class="student-features">
+        <div class="feature">
+            <h3>Message Instantly</h3>
+            <p>Talk directly with homeowners and other students — no middlemen.</p>
+        </div>
+
+        <div class="feature">
+            <h3>Post Your Place</h3>
+            <p>Subleasing? Looking for roommates? List it in minutes.</p>
+            <a href="/roommate-posts/create/" style="display:inline-block; margin-top:0.75rem; color:var(--teal-dark); border:1.5px solid var(--teal-dark); padding:0.4rem 1rem; border-radius:20px; font-size:0.85rem; text-decoration:none;">Post a Listing →</a>
+            <a href="/roommate-posts/" style="display:inline-block; margin-top:0.75rem; color:var(--teal-dark); border:1.5px solid var(--teal-dark); padding:0.4rem 1rem; border-radius:20px; font-size:0.85rem; text-decoration:none;">Browse Roommates →</a>
+        </div>
+
+        <div class="feature">
+            <h3>Student Focused</h3>
+            <p>Designed for students, open to all.</p>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         LIVE FEED SECTION  — powered by Daphne / Django Channels WebSocket
+         ═══════════════════════════════════════════════════════════════════ -->
+    <section class="live-feed-section">
+
+        <div class="live-feed-header">
+            <div>
+                <h2>
+                    Latest Listings
+                    <span class="live-badge">Live</span>
+                </h2>
+                <p class="live-feed-meta">New posts appear automatically — no refresh needed.</p>
+            </div>
+            <span class="feed-status" id="feedStatus">
+                <span class="feed-status-dot"></span>
+                Connecting…
+            </span>
+        </div>
+
+        <!-- Skeleton loaders shown while WS loads -->
+        <div class="feed-list" id="feedList">
+            <div class="feed-skeleton"></div>
+            <div class="feed-skeleton" style="animation-delay:0.12s"></div>
+            <div class="feed-skeleton" style="animation-delay:0.24s"></div>
+        </div>
+
+        <a href="/roommate-posts/" class="feed-more-link">View all listings →</a>
+
+    </section>
+
+    <!-- Login / Signup Modal (unchanged) -->
+    <div class="modal-backdrop" id="modalBackdrop">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-tabs">
+                <button class="tab active" id="tabLogin">Log In</button>
+                <button class="tab"         id="tabSignup">Sign Up</button>
+            </div>
+
+            <!-- Login form -->
+            <div id="formLogin">
+                <form method="post" action="{% url 'bear_estate_homepage' %}">
+                    {% csrf_token %}
+                    <div class="field">
+                        <label for="log-username">Username</label>
+                        <input id="log-username" type="text" name="username" placeholder="Your username" required>
+                    </div>
+                    <div class="field">
+                        <label for="log-password">Password</label>
+                        <input id="log-password" type="password" name="password" placeholder="Your password" required>
+                    </div>
+                    {% if login_error %}
+                        <p style="color:#c0392b; font-size:0.85rem; margin-bottom:0.5rem;">{{ login_error }}</p>
+                    {% endif %}
+                    <button class="btn-submit" type="submit">Log In</button>
+                    <p class="switch-text">No account? <a href="#" id="switchToSignup">Sign up</a></p>
+                </form>
+            </div>
+
+            <!-- Signup form -->
+            <div id="formSignup" class="hidden">
+                <form method="post" action="/register/">
+                    {% csrf_token %}
+                    <div class="field">
+                        <label for="reg-username">Username</label>
+                        <input id="reg-username" type="text" name="username" placeholder="Choose a username" required>
+                    </div>
+                    <div class="field">
+                        <label for="reg-email">Email</label>
+                        <input id="reg-email" type="email" name="email" placeholder="you@example.com">
+                    </div>
+                    <div class="field">
+                        <label for="reg-password1">Password</label>
+                        <input id="reg-password1" type="password" name="password1" placeholder="Create a password" required>
+                    </div>
+                    <div class="field">
+                        <label for="reg-password2">Confirm Password</label>
+                        <input id="reg-password2" type="password" name="password2" placeholder="Repeat your password" required>
+                    </div>
+                    {% if register_errors %}
+                        <ul style="color:#c0392b; font-size:0.85rem; margin-bottom:0.5rem; padding-left:1rem;">
+                            {% for error in register_errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                    <button class="btn-submit" type="submit">Create Account</button>
+                    <p class="switch-text">Already have an account? <a href="#" id="switchToLogin">Log in</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Triangle Scroll Script -->
+    <script>
+        window.addEventListener("scroll", function() {
+            let scrollY = window.scrollY;
+            let triangle = document.getElementById("triangle");
+            let newSize = 350 + scrollY * 0.6;
+            triangle.style.borderLeft  = newSize + "px solid #1a7a8a";
+            triangle.style.borderBottom = "60px solid transparent";
+        });
+    </script>
+
+    <!-- Rent/Buy Budget Swap Script -->
+    <script>
+        const searchIntent  = document.getElementById('searchIntent');
+        const budgetLabel   = document.getElementById('budgetLabel');
+        const searchBudget  = document.getElementById('searchBudget');
+        const selectedBudget = "{{ selected_budget|default:'any'|escapejs }}";
+
+        const rentOptions = [
+            { value: 'any',         label: 'Any Rent' },
+            { value: '0-900',       label: 'Under $900' },
+            { value: '900-1400',    label: '$900 – $1,400' },
+            { value: '1400-2000',   label: '$1,400 – $2,000' },
+            { value: '2000-999999', label: '$2,000+' },
+        ];
+        const buyOptions = [
+            { value: 'any',               label: 'Any Price' },
+            { value: '0-300000',          label: 'Under $300k' },
+            { value: '300000-600000',     label: '$300k – $600k' },
+            { value: '600000-1000000',    label: '$600k – $1M' },
+            { value: '1000000-999999999', label: '$1M+' },
+        ];
+
+        function setSelectOptions(el, opts, sel) {
+            el.innerHTML = '';
+            for (const o of opts) {
+                const opt = document.createElement('option');
+                opt.value = o.value; opt.textContent = o.label;
+                if (o.value === sel) opt.selected = true;
+                el.appendChild(opt);
+            }
+        }
+
+        function updateBudgetOptions() {
+            const cur = searchBudget.value || selectedBudget || 'any';
+            if (searchIntent.value === 'rent') {
+                budgetLabel.textContent = 'Monthly Rent';
+                setSelectOptions(searchBudget, rentOptions, cur);
+            } else {
+                budgetLabel.textContent = 'Purchase Price';
+                setSelectOptions(searchBudget, buyOptions, cur);
+            }
+        }
+
+        if (searchIntent) {
+            searchIntent.addEventListener('change', updateBudgetOptions);
+            updateBudgetOptions();
+        }
+    </script>
+
+    <!-- Modal Script -->
+    <script>
+        const backdrop  = document.getElementById('modalBackdrop');
+        const loginBtn  = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const closeBtn  = document.getElementById('modalClose');
+        const tabLogin  = document.getElementById('tabLogin');
+        const tabSignup = document.getElementById('tabSignup');
+        const formLogin = document.getElementById('formLogin');
+        const formSignup = document.getElementById('formSignup');
+        const switchSU  = document.getElementById('switchToSignup');
+        const switchLI  = document.getElementById('switchToLogin');
+
+        function showModal(mode) { backdrop.classList.add('active'); setTab(mode); }
+        function hideModal()     { backdrop.classList.remove('active'); }
+        function setTab(mode) {
+            const isLogin = mode === 'login';
+            tabLogin.classList.toggle('active', isLogin);
+            tabSignup.classList.toggle('active', !isLogin);
+            formLogin.classList.toggle('hidden', !isLogin);
+            formSignup.classList.toggle('hidden', isLogin);
+        }
+
+        if (loginBtn)  loginBtn.addEventListener('click',  e => { e.preventDefault(); showModal('login');  });
+        if (signupBtn) signupBtn.addEventListener('click', e => { e.preventDefault(); showModal('signup'); });
+        if (closeBtn)  closeBtn.addEventListener('click',  hideModal);
+        if (backdrop)  backdrop.addEventListener('click',  e => { if (e.target === backdrop) hideModal(); });
+        if (tabLogin)  tabLogin.addEventListener('click',  () => setTab('login'));
+        if (tabSignup) tabSignup.addEventListener('click', () => setTab('signup'));
+        if (switchSU)  switchSU.addEventListener('click',  e => { e.preventDefault(); setTab('signup'); });
+        if (switchLI)  switchLI.addEventListener('click',  e => { e.preventDefault(); setTab('login');  });
+
+        {% if show_login_modal  %} showModal('login');  {% endif %}
+        {% if show_signup_modal %} showModal('signup'); {% endif %}
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         LIVE FEED WebSocket Script
+         Connects to ws/feed/ (served by Daphne via ListingFeedConsumer).
+         Handles: initial batch load, real-time new_listing push, reconnect.
+         ═══════════════════════════════════════════════════════════════════ -->
+    <script>
+    (function () {
+        const MAX_FEED_ITEMS = 20;     // cap rows shown on homepage
+        const RECONNECT_DELAY = 4000;  // ms before retrying a dropped socket
+
+        const feedList   = document.getElementById('feedList');
+        const feedStatus = document.getElementById('feedStatus');
+        const statusDot  = feedStatus.querySelector('.feed-status-dot');
+
+        let socket = null;
+
+        // ── Status pill helper ──────────────────────────────────────────
+        function setStatus(state, label) {
+            feedStatus.className  = 'feed-status ' + state;
+            feedStatus.innerHTML  = `<span class="feed-status-dot"></span> ${label}`;
+        }
+
+        // ── Build a single feed-tab DOM element from a listing object ───
+        function buildTab(listing, isNew = false) {
+            const tab = document.createElement('a');
+            tab.className  = 'feed-tab' + (isNew ? ' feed-new' : '');
+            tab.href       = `/roommate-posts/${listing.slug}/`;
+            tab.title      = `View listing by ${listing.name}`;
+
+            // Avatar — img if URL provided, else initials bubble
+            let avatarHTML;
+            if (listing.avatar) {
+                avatarHTML = `<img src="${listing.avatar}" alt="${listing.name}" loading="lazy">`;
+            } else {
+                const initials = listing.name
+                    .split(' ')
+                    .map(w => w[0] || '')
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+                avatarHTML = initials;
+            }
+
+            // Rent display
+            const rentHTML = listing.rent
+                ? `$${Number(listing.rent).toLocaleString()}<span> / mo</span>`
+                : '<span>Contact for price</span>';
+
+            // Type badge (only if we have the value)
+            const typeBadge = listing.type
+                ? `<span class="feed-type-badge">${listing.type}</span>`
+                : '';
+
+            tab.innerHTML = `
+                <div class="feed-avatar">${avatarHTML}</div>
+
+                <div class="feed-info">
+                    <div class="feed-name">${escHtml(listing.name)}</div>
+                    <div class="feed-location">${escHtml(listing.location || 'Location not specified')}</div>
+                    <div class="feed-desc">${escHtml(listing.description || '')}</div>
+                </div>
+
+                <div class="feed-stats">
+                    <div class="feed-rent">${rentHTML}</div>
+                    ${typeBadge}
+                    <div class="feed-date">${escHtml(listing.created_at || '')}</div>
+                </div>
+
+                <span class="feed-arrow">›</span>
+            `;
+
+            // Remove the "new" highlight after a short moment
+            if (isNew) {
+                setTimeout(() => tab.classList.remove('feed-new'), 3000);
+            }
+
+            return tab;
+        }
+
+        // ── Render a full list of listings (initial load) ───────────────
+        function renderInitial(listings) {
+            feedList.innerHTML = '';
+            if (!listings.length) {
+                feedList.innerHTML = '<p class="feed-empty">No listings yet — be the first to post!</p>';
+                return;
+            }
+            for (const lst of listings) {
+                feedList.appendChild(buildTab(lst, false));
+            }
+        }
+
+        // ── Prepend a single new listing, trim overflow ─────────────────
+        function prependListing(listing) {
+            // Remove skeleton rows if they're still there
+            feedList.querySelectorAll('.feed-skeleton').forEach(s => s.remove());
+
+            const tab = buildTab(listing, true);
+            feedList.insertBefore(tab, feedList.firstChild);
+
+            // Keep the list capped
+            const rows = feedList.querySelectorAll('.feed-tab');
+            if (rows.length > MAX_FEED_ITEMS) {
+                rows[rows.length - 1].remove();
+            }
+        }
+
+        // ── Simple HTML escape ──────────────────────────────────────────
+        function escHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ── Open WebSocket & wire handlers ─────────────────────────────
+        function connect() {
+            setStatus('', 'Connecting…');
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            socket = new WebSocket(`${proto}://${location.host}/ws/feed/`);
+
+            socket.onopen = () => {
+                setStatus('connected', 'Live');
+            };
+
+            socket.onmessage = (event) => {
+                let data;
+                try { data = JSON.parse(event.data); } catch { return; }
+
+                if (data.type === 'initial_listings') {
+                    renderInitial(data.listings);
+                } else if (data.type === 'new_listing') {
+                    prependListing(data.listing);
+                }
+            };
+
+            socket.onclose = () => {
+                setStatus('error', 'Reconnecting…');
+                setTimeout(connect, RECONNECT_DELAY);
+            };
+
+            socket.onerror = () => {
+                setStatus('error', 'Connection error');
+                socket.close();
+            };
+        }
+
+        // Kick off
+        connect();
+    })();
+    </script>
+{% endblock %}

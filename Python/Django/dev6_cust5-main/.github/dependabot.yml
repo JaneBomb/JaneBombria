@@ -1,0 +1,33 @@
+#tell github which dependency ecosystems to monitor and update
+version: 2
+
+updates:
+  #watch the root requirements.txt file
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "security"
+    open-pull-requests-limit: 5
+
+  #watch the django project's requirements.txt file
+  - package-ecosystem: "pip"
+    directory: "/myproject"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "security"
+    open-pull-requests-limit: 5
+
+  #watch github action versions used in workflow files
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "security"
+    open-pull-requests-limit: 5

@@ -1,0 +1,44 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+myproject/.env
+
+# Virtual environments
+.venv/
+venv/
+myenv/
+myproject/myenv/
+
+# Runtime and generated files
+myproject/db.sqlite3
+myproject/staticfiles/
+
+# Local AI review test files
+diff.txt
+feedback.md
+
+# OS junk
+.DS_Store
+.env
+.env
+
+# Database files (catch-all, not just the one path)
+*.sqlite3
+*.sqlite3-journal
+
+# Redis
+*.rdb
+*.aof
+myproject/dump.rdb
+myproject/redis_logs.txt
+
+# Logs
+*.log
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp

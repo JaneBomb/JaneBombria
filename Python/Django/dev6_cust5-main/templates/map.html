@@ -1,0 +1,957 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Map - BearEstate{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Hide the triangle */
+        #triangle { display: none !important; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .sidebar {
+            width: 320px;
+            border-right: 1px solid #ccc;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+        }
+
+        .sidebar form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar input,
+        .sidebar select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .sidebar button {
+            padding: 8px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+
+        .ai-box {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            background: #fff;
+            border: 2px solid transparent;
+            background-image:
+                linear-gradient(#fff, #fff),
+                linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .ai-box h4 {
+            margin-bottom: 6px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ai-badge {
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .ai-summary {
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .ai-advice {
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 8px;
+            background: #fff9e6;
+            border: 1px solid #f2dca0;
+            border-radius: 6px;
+            color: #5a4a10;
+        }
+
+        .ai-error {
+            font-size: 12px;
+            color: #a33;
+            padding: 6px 0;
+        }
+
+        .ai-loading {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .ai-pick {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #e4e4e4;
+            position: relative;
+        }
+
+        .ai-pick .addr {
+            font-weight: bold;
+            font-size: 13px;
+            padding-right: 38px;
+        }
+
+        .ai-pick .meta {
+            font-size: 12px;
+            color: #555;
+            margin: 2px 0;
+        }
+
+        .ai-pick .reason {
+            font-size: 12px;
+            margin-top: 4px;
+            color: #222;
+        }
+
+        .ai-pick .score {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 11px;
+            color: #fff;
+            background: #2575fc;
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+
+        .ai-pick .hi-list {
+            margin-top: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ai-pick .hi {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: #e9f1ff;
+            color: #1a4bb8;
+        }
+
+        /* ---------- AI chat drawer ---------- */
+        .ai-chat {
+            margin-top: 14px;
+            border: 1px solid #d4d4d4;
+            border-radius: 8px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ai-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .ai-chat-status {
+            font-size: 10px;
+            font-weight: 500;
+            opacity: 0.85;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .ai-chat-status.ok {
+            color: #c3f7cc;
+        }
+
+        .ai-chat-status.err {
+            color: #ffd0cc;
+        }
+
+        .ai-chat-messages {
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .ai-chat-msg {
+            max-width: 90%;
+            padding: 6px 10px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .ai-chat-msg-user {
+            align-self: flex-end;
+            background: #2575fc;
+            color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-chat-msg-assistant {
+            align-self: flex-start;
+            background: #f1f1f4;
+            color: #222;
+            border-bottom-left-radius: 2px;
+        }
+
+        .ai-chat-msg-system {
+            align-self: center;
+            background: transparent;
+            color: #666;
+            font-style: italic;
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+
+        .ai-chat-thinking {
+            opacity: 0.6;
+        }
+
+        .ai-chat-form {
+            display: flex;
+            border-top: 1px solid #e4e4e4;
+        }
+
+        .ai-chat-input {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            outline: none;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        .ai-chat-input:disabled {
+            background: #f7f7f7;
+            color: #999;
+        }
+
+        .ai-chat-send {
+            border: none;
+            padding: 0 14px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .ai-chat-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="sidebar">
+            {% if request.method == "POST" or request.method == "GET" %}
+                <div style="margin-top: 10px; font-size: 14px; color: #555;">
+                    {{ properties_count }} propert{{ properties_count|pluralize:"y,ies" }} found
+                </div>
+            {% endif %}
+
+            <h3>Filters</h3>
+            <form method="POST">
+                {% csrf_token %}
+
+                <input type="text" name="city" placeholder="Enter a city..." value="{{ city|default:'' }}">
+
+                <select name="state">
+                    <option value="AL" {% if state == "AL" %}selected{% endif %}>Alabama</option>
+                    <option value="AK" {% if state == "AK" %}selected{% endif %}>Alaska</option>
+                    <option value="AZ" {% if state == "AZ" %}selected{% endif %}>Arizona</option>
+                    <option value="AR" {% if state == "AR" %}selected{% endif %}>Arkansas</option>
+                    <option value="CA" {% if state == "CA" %}selected{% endif %}>California</option>
+                    <option value="CO" {% if state == "CO" or not state %}selected{% endif %}>Colorado</option>
+                    <option value="CT" {% if state == "CT" %}selected{% endif %}>Connecticut</option>
+                    <option value="DE" {% if state == "DE" %}selected{% endif %}>Delaware</option>
+                    <option value="FL" {% if state == "FL" %}selected{% endif %}>Florida</option>
+                    <option value="GA" {% if state == "GA" %}selected{% endif %}>Georgia</option>
+                    <option value="HI" {% if state == "HI" %}selected{% endif %}>Hawaii</option>
+                    <option value="ID" {% if state == "ID" %}selected{% endif %}>Idaho</option>
+                    <option value="IL" {% if state == "IL" %}selected{% endif %}>Illinois</option>
+                    <option value="IN" {% if state == "IN" %}selected{% endif %}>Indiana</option>
+                    <option value="IA" {% if state == "IA" %}selected{% endif %}>Iowa</option>
+                    <option value="KS" {% if state == "KS" %}selected{% endif %}>Kansas</option>
+                    <option value="KY" {% if state == "KY" %}selected{% endif %}>Kentucky</option>
+                    <option value="LA" {% if state == "LA" %}selected{% endif %}>Louisiana</option>
+                    <option value="ME" {% if state == "ME" %}selected{% endif %}>Maine</option>
+                    <option value="MD" {% if state == "MD" %}selected{% endif %}>Maryland</option>
+                    <option value="MA" {% if state == "MA" %}selected{% endif %}>Massachusetts</option>
+                    <option value="MI" {% if state == "MI" %}selected{% endif %}>Michigan</option>
+                    <option value="MN" {% if state == "MN" %}selected{% endif %}>Minnesota</option>
+                    <option value="MS" {% if state == "MS" %}selected{% endif %}>Mississippi</option>
+                    <option value="MO" {% if state == "MO" %}selected{% endif %}>Missouri</option>
+                    <option value="MT" {% if state == "MT" %}selected{% endif %}>Montana</option>
+                    <option value="NE" {% if state == "NE" %}selected{% endif %}>Nebraska</option>
+                    <option value="NV" {% if state == "NV" %}selected{% endif %}>Nevada</option>
+                    <option value="NH" {% if state == "NH" %}selected{% endif %}>New Hampshire</option>
+                    <option value="NJ" {% if state == "NJ" %}selected{% endif %}>New Jersey</option>
+                    <option value="NM" {% if state == "NM" %}selected{% endif %}>New Mexico</option>
+                    <option value="NY" {% if state == "NY" %}selected{% endif %}>New York</option>
+                    <option value="NC" {% if state == "NC" %}selected{% endif %}>North Carolina</option>
+                    <option value="ND" {% if state == "ND" %}selected{% endif %}>North Dakota</option>
+                    <option value="OH" {% if state == "OH" %}selected{% endif %}>Ohio</option>
+                    <option value="OK" {% if state == "OK" %}selected{% endif %}>Oklahoma</option>
+                    <option value="OR" {% if state == "OR" %}selected{% endif %}>Oregon</option>
+                    <option value="PA" {% if state == "PA" %}selected{% endif %}>Pennsylvania</option>
+                    <option value="RI" {% if state == "RI" %}selected{% endif %}>Rhode Island</option>
+                    <option value="SC" {% if state == "SC" %}selected{% endif %}>South Carolina</option>
+                    <option value="SD" {% if state == "SD" %}selected{% endif %}>South Dakota</option>
+                    <option value="TN" {% if state == "TN" %}selected{% endif %}>Tennessee</option>
+                    <option value="TX" {% if state == "TX" %}selected{% endif %}>Texas</option>
+                    <option value="UT" {% if state == "UT" %}selected{% endif %}>Utah</option>
+                    <option value="VT" {% if state == "VT" %}selected{% endif %}>Vermont</option>
+                    <option value="VA" {% if state == "VA" %}selected{% endif %}>Virginia</option>
+                    <option value="WA" {% if state == "WA" %}selected{% endif %}>Washington</option>
+                    <option value="WV" {% if state == "WV" %}selected{% endif %}>West Virginia</option>
+                    <option value="WI" {% if state == "WI" %}selected{% endif %}>Wisconsin</option>
+                    <option value="WY" {% if state == "WY" %}selected{% endif %}>Wyoming</option>
+                </select>
+
+                <label for="rent-sale" style="font-size: 13px; font-weight: 500;">Listing Type</label>
+                <select name="intent" id="rent-sale">
+                    <option value="" {% if not listing_type %}selected{% endif %}>Any</option>
+                    <option value="for_rent" {% if listing_type == "for_rent" %}selected{% endif %}>Rent</option>
+                    <option value="for_sale" {% if listing_type == "for_sale" %}selected{% endif %}>Buy</option>
+                </select>
+
+                <label for="house-type" style="font-size: 13px; font-weight: 500;">Property Type</label>
+                <select name="type" id="house-type">
+                    <option value="" {% if not property_type %}selected{% endif %}>Any</option>
+                    <option value="House" {% if property_type == "House" %}selected{% endif %}>House</option>
+                    <option value="Apartment" {% if property_type == "Apartment" %}selected{% endif %}>Apartment</option>
+                    <option value="Condo" {% if property_type == "Condo" %}selected{% endif %}>Condo</option>
+                    <option value="Townhouse" {% if property_type == "Townhouse" %}selected{% endif %}>Townhouse</option>
+                </select>
+
+                <label for="search-budget" style="font-size: 13px; font-weight: 500;">Budget</label>
+                <select name="budget" id="searchBudget" >
+                    <option value="any" {% if price_range == "any" or not price_range %}selected{% endif %}>Any Rent</option>
+                    <option value="0-900" {% if price_range == "0-900" %}selected{% endif %}>Under $900</option>
+                    <option value="900-1400" {% if price_range == "900-1400" %}selected{% endif %}>$900 – $1,400</option>
+                    <option value="1400-2000" {% if price_range == "1400-2000" %}selected{% endif %}>$1,400 – $2,000</option>
+                    <option value="2000-999999" {% if price_range == "2000-999999" %}selected{% endif %}>$2,000+</option>
+                </select>
+
+                <label for="sort" style="font-size: 13px; font-weight: 500;">Sort By</label>
+                <select name="sort" id="sort">
+                    <option value="" {% if not sort_by %}selected{% endif %}>Sort by...</option>
+                    <option value="rent_asc" {% if sort_by == "rent_asc" %}selected{% endif %}>Rent: Low to High</option>
+                    <option value="rent_desc" {% if sort_by == "rent_desc" %}selected{% endif %}>Rent: High to Low</option>
+                    <option value="total_cost_asc" {% if sort_by == "total_cost_asc" %}selected{% endif %}>Total Cost: Low to High</option>
+                    <option value="total_cost_desc" {% if sort_by == "total_cost_desc" %}selected{% endif %}>Total Cost: High to Low</option>
+                </select>
+
+                <label for="amenity" style="font-size: 13px; font-weight: 500;">Amenity</label>
+                <select name="amenity" id="amenity">
+                    <option value="any" {% if amenity_filter == "any" or not amenity_filter %}selected{% endif %}>Any amenity</option>
+                    <option value="Grocery" {% if amenity_filter == "Grocery" %}selected{% endif %}>Grocery</option>
+                    <option value="Transit" {% if amenity_filter == "Transit" %}selected{% endif %}>Transit</option>
+                    <option value="Gym" {% if amenity_filter == "Gym" %}selected{% endif %}>Gym</option>
+                    <option value="Restaurants" {% if amenity_filter == "Restaurants" %}selected{% endif %}>Restaurants</option>
+                    <option value="Coffee" {% if amenity_filter == "Coffee" %}selected{% endif %}>Coffee</option>
+                </select>
+
+                <label for="keyword" style="font-size: 13px; font-weight: 500;">Keyword</label>
+                <input type="text" name="keyword"
+                       placeholder="e.g. furnished, near campus, gym"
+                       value="{{ keyword|default:'' }}">
+
+                <button type="submit">Search</button>
+            </form>
+
+            {% if agent_ads %}
+            <div class="agent-ad-box" style="border: 2px solid #1d6f8f; border-radius: 8px; padding: 14px; margin: 16px 0; background: white;">
+                <h3 style="margin-top: 0;">Local Agent Spotlight</h3>
+                {% for ad in agent_ads %}
+                <div style="margin-bottom: 12px;">
+                    <strong>{{ ad.headline }}</strong>
+                    <p style="margin: 6px 0;">{{ ad.brokerage }}</p>
+                    <p style="margin: 6px 0;">{{ ad.city }}, {{ ad.state }}</p>
+                    {% if ad.specialties %}
+                        <p style="margin: 6px 0;">{{ ad.specialties }}</p>
+                        <a href="/roommate-posts/agents/{{ ad.id }}/">
+                            View profile and contact
+                        </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# ---------- AI Listing Agent ---------- #}
+            {% if request.user.is_authenticated %}
+            <div class="ai-box" id="aiBox">
+                <h4>AI Listing Agent</h4>
+                <div id="aiLoading" class="ai-loading">
+                    Curating recommendations based on your filters and search history…
+                </div>
+                <div id="aiContent" style="display:none;">
+                    <p id="aiSummary" class="ai-summary"></p>
+                    <div id="aiPicks"></div>
+                    <div id="aiAdvice" class="ai-advice" style="display:none;"></div>
+                </div>
+                <div id="aiError" class="ai-error" style="display:none;"></div>
+            </div>
+
+            <script>
+                (function () {
+                    const box       = document.getElementById("aiBox");
+                    const loading   = document.getElementById("aiLoading");
+                    const content   = document.getElementById("aiContent");
+                    const errorEl   = document.getElementById("aiError");
+                    const summaryEl = document.getElementById("aiSummary");
+                    const picksEl   = document.getElementById("aiPicks");
+                    const adviceEl  = document.getElementById("aiAdvice");
+
+                    function escapeHtml(s) {
+                        return String(s == null ? "" : s)
+                            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#39;");
+                    }
+
+                    const params = new URLSearchParams({
+                        city:    "{{ city|escapejs }}",
+                        state:   "{{ state|escapejs }}",
+                        intent:  "{{ listing_type|escapejs }}",
+                        type:    "{{ property_type|escapejs }}",
+                        budget:  "{{ price_range|escapejs }}",
+                        amenity: "{{ amenity_filter|escapejs }}",
+                        keyword: "{{ keyword|escapejs }}",
+                    });
+
+                    fetch("/ai-agent/?" + params.toString(), {
+                        headers: { "Accept": "application/json" },
+                        credentials: "same-origin",
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        loading.style.display = "none";
+                        if (!data.ok) {
+                            errorEl.style.display = "block";
+                            errorEl.textContent = data.error || "AI agent unavailable.";
+                            return;
+                        }
+                        content.style.display = "block";
+                        summaryEl.textContent = data.summary || "";
+
+                        if (!data.picks || !data.picks.length) {
+                            picksEl.innerHTML =
+                              '<div class="ai-loading">' +
+                              'No curated matches, try loosening your filters. </div>';
+                        } else {
+                            picksEl.innerHTML = data.picks.map(p => `
+                                <div class="ai-pick">
+                                    <span class="score">${p.score}</span>
+                                    <div class="addr">${escapeHtml(p.address)}</div>
+                                    <div class="meta">
+                                        ${escapeHtml(p.property_type)} •
+                                        $${p.rent}/mo •
+                                        total ~$${p.total_monthly_cost}
+                                    </div>
+                                    <div class="reason">${escapeHtml(p.reasoning)}</div>
+                                    ${
+                                        p.highlights && p.highlights.length
+                                        ? '<div class="hi-list">' +
+                                            p.highlights
+                                            .map(h => `<span class="hi">${escapeHtml(h)}</span>`)
+                                            .join("") +
+                                            '</div>'
+                                        : ""
+                                    }
+                                </div>
+                            `).join("");
+                        }
+
+                        if (data.advice) {
+                            adviceEl.style.display = "block";
+                            adviceEl.textContent = data.advice;
+                        }
+                    })
+                    .catch(err => {
+                        loading.style.display = "none";
+                        errorEl.style.display = "block";
+                        errorEl.textContent = "Could not reach the AI agent.";
+                    });
+                })();
+            </script>
+
+            <div class="ai-chat" id="aiChat">
+                <div class="ai-chat-header">
+                    <span>Chat with AI agent</span>
+                    <span id="aiChatStatus" class="ai-chat-status">connecting…</span>
+                </div>
+                <div id="aiChatMessages" class="ai-chat-messages"></div>
+                <form id="aiChatForm" class="ai-chat-form" autocomplete="off">
+                    <input
+                        type="text"
+                        id="aiChatInput"
+                        class="ai-chat-input"
+                        placeholder="Ask about these listings or refine your search…"
+                        maxlength="2000"
+                        disabled
+                    >
+                    <button type="submit" id="aiChatSend" class="ai-chat-send" disabled>Send</button>
+                </form>
+            </div>
+
+            <script>
+                // Build WebSocket params from Django context directly.
+                // (Reading from json_script tags here would race the parser,
+                // since those tags appear later in the document.)
+                const params = new URLSearchParams({
+                    city:    "{{ city|escapejs }}",
+                    state:   "{{ state|escapejs }}",
+                    intent:  "{{ listing_type|escapejs }}",
+                    type:    "{{ property_type|escapejs }}",
+                    budget:  "{{ price_range|escapejs }}",
+                    amenity: "{{ amenity_filter|escapejs }}",
+                    keyword: "{{ keyword|escapejs }}",
+                });
+            </script>
+
+            <script>
+            (function () {
+                const statusEl   = document.getElementById("aiChatStatus");
+                const messagesEl = document.getElementById("aiChatMessages");
+                const formEl     = document.getElementById("aiChatForm");
+                const inputEl    = document.getElementById("aiChatInput");
+                const sendBtn    = document.getElementById("aiChatSend");
+
+                function esc(s) {
+                    return String(s == null ? "" : s)
+                        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#39;");
+                }
+
+                function appendMessage(role, text, opts) {
+                    opts = opts || {};
+                    const div = document.createElement("div");
+                    div.className = "ai-chat-msg ai-chat-msg-" + role;
+                    if (opts.id) div.id = opts.id;
+                    div.textContent = text;
+                    messagesEl.appendChild(div);
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                    return div;
+                }
+
+                function setStatus(text, cls) {
+                    statusEl.textContent = text;
+                    statusEl.className = "ai-chat-status " + (cls || "");
+                }
+
+                function enableInput(enabled) {
+                    inputEl.disabled = !enabled;
+                    sendBtn.disabled = !enabled;
+                    if (enabled) inputEl.focus();
+                }
+
+                // Build the WebSocket URL from the same filters the page was loaded with.
+                const qs = params;
+                const proto = location.protocol === "https:" ? "wss:" : "ws:";
+                const wsUrl = proto + "//" + location.host + "/ws/ai-agent/?" + qs.toString();
+                const ws = new WebSocket(wsUrl);
+
+                let thinkingEl = null;
+
+                ws.addEventListener("open", () => setStatus("connected", "ok"));
+                ws.addEventListener("close", (e) => {
+                    setStatus(
+                        e.code === 4401 ? "sign in required"
+                        : e.code === 4400 ? "run a search first"
+                        : "disconnected",
+                        "err"
+                    );
+                    enableInput(false);
+                });
+                ws.addEventListener("error", () => setStatus("connection error", "err"));
+
+                ws.addEventListener("message", (evt) => {
+                    let data;
+                    try { data = JSON.parse(evt.data); } catch { return; }
+
+                    switch (data.type) {
+                        case "ready":
+                            if (data.greeting) appendMessage("assistant", data.greeting);
+                            if (data.notice)   appendMessage("system", data.notice);
+                            enableInput(true);
+                            setStatus("ready", "ok");
+                            break;
+
+                        case "user_message":
+                            break;
+
+                        case "thinking":
+                            thinkingEl = appendMessage("assistant", "…", { id: "aiChatThinking" });
+                            thinkingEl.classList.add("ai-chat-thinking");
+                            break;
+
+                        case "assistant_message":
+                            if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+                            appendMessage("assistant", data.text || "");
+                            enableInput(true);
+                            break;
+
+                        case "system_message":
+                            // Guardrail-blocked message etc. Calm gray, no alert icon.
+                            if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+                            appendMessage("system", data.text || "");
+                            enableInput(true);
+                            break;
+
+                        case "listings_updated":
+                            // Redraw map pins using the map's existing helpers
+                            // (defined in the Leaflet script block below).
+                            if (typeof clearMarkers === "function" &&
+                                typeof addMarkers === "function") {
+                                clearMarkers();
+                                addMarkers(data.listings || []);
+                            }
+                            const n = (data.listings || []).length;
+                            appendMessage(
+                                "system",
+                                n === 0
+                                ? "No listings match the refined search."
+                                    : "Map updated: " + n + " listing" + (n === 1 ? "" : "s") + " now showing."
+                            );
+                            break;
+
+                        case "error":
+                            if (thinkingEl) { thinkingEl.remove(); thinkingEl = null; }
+                            appendMessage("system", "⚠ " + (data.error || "Something went wrong."));
+                            enableInput(true);
+                            break;
+                    }
+                });
+
+                formEl.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    const text = inputEl.value.trim();
+                    if (!text || ws.readyState !== WebSocket.OPEN) return;
+                    appendMessage("user", text);
+                     ws.send(JSON.stringify({ type: "user_message", text: text }));
+                    inputEl.value = "";
+                    enableInput(false);
+                });
+            })();
+            </script>
+            {% else %}
+            <div class="ai-box">
+                 <h4>AI Listing Agent</h4>
+                <p class="ai-summary">
+                     Sign in to get AI-curated picks personalized to your filters and search history.
+                </p>
+                <a href="{% url 'bear_estate_homepage' %}"
+                    style="display:inline-block; margin-top:6px; padding:6px 12px;
+                            background:linear-gradient(135deg,#6a11cb,#2575fc);
+                            color:#fff; border-radius:6px; text-decoration:none;
+                            font-size:13px;">
+                    Log in or sign up!
+                </a>
+            </div>
+        {% endif %}
+        </div>
+        
+            <!-- Json script tags-->
+            {{ amenity_filter|default:''|json_script:"amenity-filter-data" }}
+            {{ properties|json_script:"map-properties-data" }}
+            {{ city|default:''|json_script:"filter-city" }}
+            {{ state|default:''|json_script:"filter-state" }}
+            {{ listing_type|default:''|json_script:"filter-intent" }}
+            {{ property_type|default:''|json_script:"filter-type" }}
+            {{ price_range|default:''|json_script:"filter-budget" }}
+            {{ keyword|default:''|json_script:"filter-keyword" }}
+
+
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Defined here (outside the auth block) so addMarkers below can call
+        // it for both logged-in and logged-out users.
+        function getFilterVal(id) {
+            const el = document.getElementById(id);
+            return el ? (JSON.parse(el.textContent) || "") : "";
+        }
+    </script>
+    <script>
+        const map = L.map('map').setView([39.5501, -105.7821], 7);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            referrerPolicy: 'no-referrer-when-downgrade'
+        }).addTo(map);
+
+        let markers = [];
+
+        function clearMarkers() {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+        }
+
+        function escapePopupHtml(value, fallback = "N/A") {
+            if (value === null || value === undefined || value === "") {
+                return fallback;
+            }
+
+            const element = document.createElement("div");
+            element.textContent = String(value);
+            return element.innerHTML;
+        }
+
+        function formatPopupNumber(value, fallback = "N/A") {
+            const numberValue = Number(value);
+
+            if (!Number.isFinite(numberValue)) {
+                return fallback;
+            }
+
+            return numberValue.toLocaleString();
+        }
+
+        function addMarkers(locations) {
+            locations.forEach(loc => {
+                const latitude = Number(loc.latitude);
+                const longitude = Number(loc.longitude);
+
+                if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                    return;
+                }
+                const selectedAmenity = getFilterVal("filter-amenity");
+
+                const allAmenities = Array.isArray(loc.nearby_amenities)
+                    ? loc.nearby_amenities
+                    : [];
+
+                const matchingAmenities = selectedAmenity && selectedAmenity.toLowerCase() !== "any"
+                    ? allAmenities.filter(a =>
+                        String(a).toLowerCase().includes(selectedAmenity.toLowerCase()))
+                    : [];
+
+                const matchingAmenityText = matchingAmenities.length > 0
+                    ? matchingAmenities.map(a => escapePopupHtml(a)).join(", ")
+                    : "None";
+
+                const allAmenitiesText = allAmenities.length > 0
+                    ? allAmenities.map(a => escapePopupHtml(a)).join(", ")
+                    : "None listed";
+
+                const locationText = escapePopupHtml(loc.location, "No address available");
+                const neighborhoodText = escapePopupHtml(loc.neighborhood, "Unknown");
+                const propertyTypeText = escapePopupHtml(loc.property_type, "Unknown type");
+
+                const bedsText = escapePopupHtml(loc.beds ?? "?", "?");
+                const bathsText = escapePopupHtml(loc.baths ?? "?", "?");
+                const squareFeetText = loc.sqft
+                    ? formatPopupNumber(loc.sqft) + " sqft"
+                    : "? sqft";
+
+                const rentText = loc.rent
+                    ? "$" + formatPopupNumber(loc.rent)
+                    : "N/A";
+
+                const utilitiesText = loc.monthly_utilities
+                    ? "$" + formatPopupNumber(loc.monthly_utilities)
+                    : "N/A";
+
+                const servicesText = loc.monthly_services
+                    ? "$" + formatPopupNumber(loc.monthly_services)
+                    : "N/A";
+
+                const totalMonthlyCostText = loc.total_monthly_cost
+                    ? "$" + formatPopupNumber(loc.total_monthly_cost)
+                    : "N/A";
+
+                const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latitude},${longitude}`;
+
+                const popupContent = `
+                    <div style="
+                        width: 260px;
+                        font-family: sans-serif;
+                        font-size: 14px;
+                        line-height: 1.4;
+                    ">
+                        <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px;">
+                            ${locationText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Neighborhood:</strong> ${neighborhoodText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Type:</strong> ${propertyTypeText}
+                        </div>
+
+                        <div style="margin-bottom: 4px; color: #555;">
+                            ${bedsText} bed &nbsp;·&nbsp;
+                            ${bathsText} bath &nbsp;·&nbsp;
+                            ${squareFeetText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Rent:</strong> ${rentText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Utilities:</strong> ${utilitiesText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Services:</strong> ${servicesText}
+                        </div>
+
+                        <div style="margin-bottom: 6px; font-weight: bold;">
+                            <strong>Total Monthly Cost:</strong> ${totalMonthlyCostText}
+                        </div>
+
+                        <div style="margin-bottom: 4px;">
+                            <strong>Matching Amenity:</strong>
+                            ${selectedAmenity && selectedAmenity.toLowerCase() !== "any" ? matchingAmenityText : "Any amenity selected"}
+                        </div>
+
+                        <div>
+                            <strong>All Nearby Amenities:</strong>
+                            ${allAmenitiesText}
+                        </div>
+
+                        <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
+                            <a
+                                href="${googleMapsUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style="
+                                    padding: 6px 8px;
+                                    background: #17324d;
+                                    color: white;
+                                    border-radius: 6px;
+                                    text-align: center;
+                                    text-decoration: none;
+                                "
+                            >
+                                Open in Google Maps
+                            </a>
+
+                            <a
+                                href="${streetViewUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style="
+                                    padding: 6px 8px;
+                                    background: #1d6f8f;
+                                    color: white;
+                                    border-radius: 6px;
+                                    text-align: center;
+                                    text-decoration: none;
+                                "
+                            >
+                                View Street View
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                const marker = L.marker([latitude, longitude])
+                    .bindPopup(popupContent, { maxWidth: 280 })
+                    .addTo(map);
+
+                markers.push(marker);
+            });
+        }
+
+        {% if city and state %}
+        const nominatimParams = new URLSearchParams({
+            city: "{{ city|escapejs }}",
+            state: "{{ state|escapejs }}",
+            country: "US",
+            format: "json"
+        });
+
+        fetch("https://nominatim.openstreetmap.org/search?" + nominatimParams.toString())
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    map.flyTo([lat, lng], 11, {
+                        animate: true,
+                        duration: 1.5
+                    });
+                }
+            });
+        {% endif %}
+
+        const locations = JSON.parse(document.getElementById("map-properties-data").textContent);
+        clearMarkers();
+        addMarkers(locations);
+    </script>
+{% endblock %}

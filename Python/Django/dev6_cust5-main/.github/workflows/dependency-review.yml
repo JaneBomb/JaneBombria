@@ -1,0 +1,29 @@
+#give the workflow a readable name in the github actions tab
+name: Dependency Review
+
+#run this workflow on pull requests into pre-main or main
+on:
+  pull_request:
+    branches:
+      - pre-main
+      - main
+
+#allow the workflow to read repository contents
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    #use a github-hosted ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      #check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #scan dependency changes in the pull request and fail only on high or critical issues
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

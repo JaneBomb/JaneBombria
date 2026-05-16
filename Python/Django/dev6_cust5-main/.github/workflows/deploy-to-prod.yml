@@ -1,0 +1,95 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+      - pre-main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bearestate-deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Run Django tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f myproject/requirements.txt ]; then pip install -r myproject/requirements.txt; fi
+          pip install coverage
+
+      - name: Run Django tests
+        env:
+          RENTCAST_API_KEY: dummy-test-key
+          DJANGO_SECRET_KEY: dummy-django-key-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          DEBUG: "True"
+        run: |
+          cd myproject
+          coverage run --source='.' manage.py test
+          coverage report -m --fail-under=80
+
+  deploy:
+    name: Deploy to BearEstateServer
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+
+    steps:
+      - name: Set up SSH key
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "${PROD_HOST:-}" ]; then
+            echo "PROD_HOST secret is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${PROD_PORT:-}" ]; then
+            echo "PROD_PORT secret is missing or empty"
+            exit 1
+          fi
+
+          if [ -z "${PROD_SSH_PRIVATE_KEY:-}" ]; then
+            echo "PROD_SSH_PRIVATE_KEY secret is missing or empty"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$PROD_PORT" -H "$PROD_HOST" >> ~/.ssh/known_hosts
+
+      - name: Run deploy script on server
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          TARGET_SHA: ${{ github.sha }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            -p "$PROD_PORT" \
+            -o BatchMode=yes \
+            "${PROD_USER}@${PROD_HOST}" \
+            "/usr/local/bin/bearestate-deploy.sh ${TARGET_SHA} ${TARGET_BRANCH}"

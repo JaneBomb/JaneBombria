@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ ad.agent.get_full_name|default:ad.agent.username }} - Agent Profile</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <style>
+    .profile-container {
+      max-width: 900px;
+      margin: 48px auto;
+      padding: 32px;
+      color: #17324d;
+      font-family: Arial, sans-serif;
+    }
+
+    .agent-card {
+      border: 1px solid #d6dee8;
+      border-radius: 14px;
+      padding: 28px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .agent-name {
+      font-size: 42px;
+      margin: 0 0 8px;
+    }
+
+    .agent-headline {
+      font-size: 28px;
+      margin: 0 0 20px;
+    }
+
+    .agent-detail {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+
+    .agent-bio {
+      margin-top: 20px;
+      line-height: 1.5;
+      font-size: 18px;
+    }
+
+    .contact-section {
+      margin-top: 32px;
+      border-top: 1px solid #d6dee8;
+      padding-top: 24px;
+    }
+
+    .contact-section h2 {
+      font-size: 30px;
+      margin-bottom: 16px;
+    }
+
+    .contact-section label {
+      display: block;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+
+    .contact-section input,
+    .contact-section textarea {
+      width: 100%;
+      max-width: 620px;
+      padding: 10px;
+      border: 1px solid #b8c4d1;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    .contact-section button {
+      margin-top: 16px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      background: #17324d;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .success-message {
+      padding: 12px;
+      background: #e7f7ec;
+      color: #176b36;
+      border: 1px solid #b7e2c4;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <main class="profile-container">
+    <section class="agent-card">
+      <h1 class="agent-name">{{ ad.agent.get_full_name|default:ad.agent.username }}</h1>
+      <h2 class="agent-headline">{{ ad.headline }}</h2>
+
+      <p class="agent-detail"><strong>Brokerage:</strong> {{ ad.brokerage }}</p>
+      <p class="agent-detail"><strong>License:</strong> {{ ad.license_number }}</p>
+      <p class="agent-detail"><strong>Location:</strong> {{ ad.city }}, {{ ad.state }}</p>
+
+      {% if ad.phone %}
+        <p class="agent-detail"><strong>Phone:</strong> {{ ad.phone }}</p>
+      {% endif %}
+
+      <p class="agent-detail">
+        <strong>Email:</strong>
+        <a href="mailto:{{ ad.email }}">{{ ad.email }}</a>
+      </p>
+
+      {% if ad.website %}
+        <p class="agent-detail">
+          <a href="{{ ad.website }}" target="_blank">Agent website</a>
+        </p>
+      {% endif %}
+
+      <p class="agent-bio">{{ ad.bio }}</p>
+
+      {% if ad.specialties %}
+        <p class="agent-detail"><strong>Specialties:</strong> {{ ad.specialties }}</p>
+      {% endif %}
+
+      <section class="contact-section">
+        <h2>Contact this agent</h2>
+
+        {% if message_sent %}
+          <p class="success-message">Your inquiry was sent successfully.</p>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit">Send Inquiry</button>
+        </form>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

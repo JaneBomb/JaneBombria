@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Roommate Post — BearEstate{% endblock %}
+
+{% block content %}
+    <br></br>
+
+    <section style="max-width:500px; margin:2rem auto; padding:0 1rem;">
+        <h2>Create a Roommate Post</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div style="margin-bottom:1rem;">
+                    <label><strong>{{ field.label }}</strong></label><br>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p style="color:red;">{{ field.errors }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-primary">Submit Post</button>
+            <a href="/roommate-posts/" style="margin-left:1rem;">Cancel</a>
+        </form>
+    </section>
+{% endblock %}

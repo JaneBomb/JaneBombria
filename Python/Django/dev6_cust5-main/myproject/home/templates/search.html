@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Properties - BearEstate</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 1rem 2rem; background: #f7f9fb; color: #1d2939; }
+        h1 { color: #17324d; margin-bottom: 1rem; }
+        .search-form { background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .results { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .property-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .property-card {
+            background: white; padding: 1rem; border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .property-card h3 { margin: 0 0 0.5rem 0; color: #17324d; }
+        .property-card .meta { color: #555; font-size: 0.9rem; }
+        .agent-ads { background: white; padding: 1rem; border-radius: 8px; }
+        .agent-ads h2 { margin-top: 0; color: #17324d; font-size: 1.1rem; }
+        .agent-ad {
+            border-bottom: 1px solid #eee; padding: 0.75rem 0;
+        }
+        .agent-ad:last-child { border-bottom: none; }
+        .agent-ad .headline { font-weight: bold; color: #17324d; }
+        .agent-ad .brokerage { color: #666; font-size: 0.85rem; }
+        .empty { color: #888; font-style: italic; padding: 1rem 0; }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: #1d6f8f; }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">&larr; Back to home</a>
+    <h1>Search Properties</h1>
+
+    <form class="search-form" method="get" action="{% url 'search' %}">
+        <input
+            type="text"
+            name="q"
+            placeholder="Search by keyword (e.g. studio, downtown, near campus)"
+            value="{{ request.GET.q|default:'' }}"
+            style="padding: 0.5rem; width: 60%;"
+        >
+        <input
+            type="text"
+            name="city"
+            placeholder="City"
+            value="{{ request.GET.city|default:'' }}"
+            style="padding: 0.5rem; width: 15%;"
+        >
+        <input
+            type="text"
+            name="state"
+            placeholder="State"
+            maxlength="2"
+            value="{{ request.GET.state|default:'' }}"
+            style="padding: 0.5rem; width: 8%;"
+        >
+        <button type="submit" style="padding: 0.5rem 1rem;">Search</button>
+    </form>
+
+    <div class="results">
+        <div>
+            <h2 style="color:#17324d;">Available Properties</h2>
+            <div class="property-list">
+                {% for property in properties %}
+                    <div class="property-card">
+                        <h3>{{ property.title }}</h3>
+                        <div class="meta">
+                            <strong>{{ property.location }}</strong>
+                            &middot; {{ property.get_property_type_display|default:property.property_type }}
+                            &middot; ${{ property.price }}
+                            {% if property.listing_type %}({{ property.listing_type }}){% endif %}
+                        </div>
+                        {% if property.description %}
+                            <p>{{ property.description }}</p>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="empty">No properties match your search.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <aside class="agent-ads">
+            <h2>Agent Picks</h2>
+            {% for ad in agent_ads %}
+                <div class="agent-ad">
+                    <div class="headline">
+                        <a href="{% url 'agent_profile' ad_id=ad.id %}">{{ ad.headline }}</a>
+                    </div>
+                    <div class="brokerage">{{ ad.brokerage }} &middot; {{ ad.city }}, {{ ad.state }}</div>
+                    {% if ad.specialties %}
+                        <div style="font-size:0.85rem;color:#555;">{{ ad.specialties }}</div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="empty">No featured agents right now.</div>
+            {% endfor %}
+        </aside>
+    </div>
+</body>
+</html>

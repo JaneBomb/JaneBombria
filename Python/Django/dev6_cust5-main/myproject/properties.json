@@ -1,0 +1,110 @@
+[
+{
+    "model": "home.property",
+    "pk": 1,
+    "fields": {
+        "title": "2 Bedroom Apartment Near Campus",
+        "location": "Boulder, CO",
+        "listing_type": "rent",
+        "property_type": "apartment",
+        "price": "850.00",
+        "description": "Spacious 2 bedroom apartment within walking distance of campus. Includes parking and laundry in building."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 2,
+    "fields": {
+        "title": "Student House with 3 Bedrooms",
+        "location": "Denver, CO",
+        "listing_type": "rent",
+        "property_type": "house",
+        "price": "1800.00",
+        "description": "3 bedroom house perfect for roommates. Large backyard and close to public transportation."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 3,
+    "fields": {
+        "title": "Modern Downtown Condo",
+        "location": "Denver, CO",
+        "listing_type": "buy",
+        "property_type": "condo",
+        "price": "280000.00",
+        "description": "Modern condo located downtown with skyline views and secured parking."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 4,
+    "fields": {
+        "title": "Townhouse Near University",
+        "location": "Fort Collins, CO",
+        "listing_type": "rent",
+        "property_type": "townhouse",
+        "price": "950.00",
+        "description": "Townhouse located near university campus. Great for students looking for quiet housing."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 5,
+    "fields": {
+        "title": "Private Room in Shared Apartment",
+        "location": "Boulder, CO",
+        "listing_type": "rent",
+        "property_type": "apartment",
+        "price": "650.00",
+        "description": "Private room available in a shared apartment. Utilities included."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 6,
+    "fields": {
+        "title": "Cozy Studio Near Campus",
+        "location": "Boulder, CO",
+        "listing_type": "rent",
+        "property_type": "apartment",
+        "price": "800.00",
+        "description": "Small studio perfect for students. Walking distance to campus and cafes."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 7,
+    "fields": {
+        "title": "Modern 1 Bedroom Apartment",
+        "location": "Denver, CO",
+        "listing_type": "rent",
+        "property_type": "apartment",
+        "price": "1100.00",
+        "description": "Newly renovated apartment with stainless steel appliances."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 8,
+    "fields": {
+        "title": "Spacious 4 Bedroom Student House",
+        "location": "Fort Collins, CO",
+        "listing_type": "rent",
+        "property_type": "house",
+        "price": "2200.00",
+        "description": "Large house ideal for roommates with backyard and parking."
+    }
+},
+{
+    "model": "home.property",
+    "pk": 9,
+    "fields": {
+        "title": "Downtown Luxury Condo",
+        "location": "Denver, CO",
+        "listing_type": "buy",
+        "property_type": "condo",
+        "price": "350000.00",
+        "description": "Beautiful downtown condo with skyline views."
+    }
+}
+]

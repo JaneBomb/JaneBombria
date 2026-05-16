@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BearEstate — Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body { background: #f4f0e8; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        .chat-header {
+            background: var(--blue);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+        }
+        .chat-log {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .msg { max-width: 70%; padding: 0.65rem 1rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.5; }
+        .msg.user { background: var(--teal-dark); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+        .msg.bot  { background: white; color: var(--text); align-self: flex-start; border-bottom-left-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            gap: 0.75rem;
+            background: white;
+            border-top: 1px solid rgba(93,209,227,0.25);
+        }
+        .chat-input input {
+            flex: 1;
+            border: 1.5px solid rgba(93,209,227,0.35);
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .chat-input input:focus { border-color: var(--blue); }
+        .chat-input button {
+            background: var(--teal-dark);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0.65rem 1.25rem;
+            font-family: var(--font-body);
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .chat-input button:hover { filter: brightness(1.1); }
+
+        /* Fix: centralised sender label styling — keeps JS clean */
+        .sender-label {
+            opacity: 0.6;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-header">
+        BearEstate — Posting #{{ posting_id }}
+    </div>
+
+    <div class="chat-log" id="chatLog"></div>
+
+    <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const postingId = {{ posting_id }};
+        const inquirerId = {{ inquirer_id }};
+        const currentUser = "{{ request.user.username }}";
+
+        // Detect wss:// vs ws:// so secure pages don't break
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${protocol}://${window.location.host}/ws/chat/${postingId}/${inquirerId}/`);
+
+        // Shared helper — used for both incoming messages and system notices
+        // Fix: sender label now uses CSS class instead of inline styles
+        function appendMessage(sender, message) {
+            const log = document.getElementById('chatLog');
+            const isMe = sender === currentUser;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg ${isMe ? 'user' : 'bot'}`;
+
+            const small = document.createElement('small');
+            small.className = 'sender-label';   // CSS class, not inline style
+            small.textContent = sender;          // safe: textContent never executes HTML
+
+            const br = document.createElement('br');
+
+            const text = document.createElement('span');
+            text.textContent = message;          // safe: textContent never executes HTML
+
+            wrapper.appendChild(small);
+            wrapper.appendChild(br);
+            wrapper.appendChild(text);
+            log.appendChild(wrapper);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Fix: onclose reuses appendMessage helper to stay consistent
+        function appendNotice(message) {
+            const log = document.getElementById('chatLog');
+            const div = document.createElement('div');
+            div.className = 'msg bot';
+            div.textContent = message;           // safe: textContent never executes HTML
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            appendMessage(data.sender, data.message);
+        };
+
+        socket.onclose = function() {
+            appendNotice('Connection closed.');
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            if (!input.value.trim()) return;
+            socket.send(JSON.stringify({ message: input.value }));
+            input.value = '';
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+#give the workflow a readable name in the GitHub Actions tab
+name: Django Tests
+
+#run this workflow on pushes to any branch and on pull requests into pre-main or main
+on:
+  push:
+
+  pull_request:
+    branches:
+      - pre-main
+      - main
+
+jobs:
+  test:
+    #use a GitHub-hosted Ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      #check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #install Python on the runner
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      #install the project dependencies and coverage
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f myproject/requirements.txt ]; then pip install -r myproject/requirements.txt; fi
+          pip install coverage flake8
+
+      #move into the Django project folder and recreate a production-style environment
+      - name: Recreate production-style environment
+        run: |
+          cd myproject
+          sed -i 's/DEBUG = True/DEBUG = False/' myproject/settings.py
+
+      #run flake8 on the repository and save the results to a report file
+      - name: Run flake8 lint scan
+        run: |
+          mkdir -p reports
+          flake8 . --statistics --count | tee reports/flake8-report.txt
+
+      #upload the flake8 report so it can be viewed from the workflow run
+      - name: Upload flake8 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flake8-report
+          path: reports/flake8-report.txt
+
+      #run the Django test suite and fail if coverage drops below 80 percent
+      - name: Run tests
+        env:
+          RENTCAST_API_KEY: dummy-test-key
+          DJANGO_SECRET_KEY: dummy-django-key-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          DEBUG: "True"
+        run: |
+          cd myproject
+          coverage run --source='.' manage.py test
+          coverage report -m --fail-under=80

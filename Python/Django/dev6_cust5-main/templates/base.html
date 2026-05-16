@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- UIkit CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/uikit@3.21.0/dist/css/uikit.min.css" rel="stylesheet">
+
+    <!-- BearEstate Styles -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.0/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.21.0/dist/js/uikit-icons.min.js"></script>
+
+    <!-- Title on tab -->
+    <title>{% block title %}BearEstate{% endblock %}</title>
+    
+    {% block extra_css %}
+    {% endblock %}
+
+
+</head>
+<!-- Inherited by all pages -->
+<!-- Banner with Login/Signup in upper right -->
+ <body>
+    <div class="top-banner">
+        <a href="{% url 'bear_estate_homepage' %}" style="text-decoration: none; color: white; font-size: 2rem; font-weight: bold; font-family: 'Playfair Display', serif; letter-spacing: 0.1em;">BearEstate</a>
+
+        <div class="nav-right">
+            <img
+                src="{% static 'images/bear.png' %}"
+                alt="BearEstate polar bear mascot"
+                class="nav-bear"
+                data-darkreader-ignore
+            >
+            <div class="nav-buttons">
+                {% if request.user.is_authenticated %}
+                  <span class="btn-login">Hi, {{ request.user.username }}</span>
+                  <a href="/chat/inbox/" class="btn-login">My Chats</a>
+                  <form method="post" action="/logout/" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn-login" style="background:none; border:none; cursor:pointer;">Log Out</button>
+                  </form>
+                {% else %}
+                  <a href="{% url 'bear_estate_homepage' %}" class="btn-login" id="loginBtn">Log In</a>
+                  <a href="{% url 'bear_estate_homepage' %}" class="btn-signup" id="signupBtn">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Triangle (below banner, grows horizontally on scroll) -->
+    <div id="triangle" class="triangle"></div>
+    
+    <!-- Triangle Scroll Script -->
+    <script>
+        window.addEventListener("scroll", function() {
+            let scrollY = window.scrollY;
+            let triangle = document.getElementById("triangle");
+            let newSize = 350 + scrollY * 0.6;
+            triangle.style.borderLeft  = newSize + "px solid #1a7a8a";
+            triangle.style.borderBottom = "60px solid transparent";
+        });
+    </script>
+
+{% block content %}
+<!-- Content on body of page -->
+{% endblock %}
+
+</body>
+</html>

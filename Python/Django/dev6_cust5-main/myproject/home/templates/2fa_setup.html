@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BearEstate - Secure Your Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; background:var(--sky,#e8f4f8); font-family:'DM Sans',sans-serif; }
+        .card { background:white; border-radius:18px; padding:36px 44px; max-width:520px; width:100%; box-shadow:0 18px 55px rgba(30,90,120,0.12); }
+        h1 { font-family:'Cormorant Garamond',serif; font-size:1.85rem; margin-bottom:6px; color:#1a3a55; }
+        .sub { color:#6b8899; font-size:.87rem; line-height:1.6; margin-bottom:26px; }
+
+        /* Method tabs */
+        .method-tabs { display:flex; gap:0; border:1.5px solid #cde8f0; border-radius:10px; overflow:hidden; margin-bottom:28px; }
+        .method-tab { flex:1; padding:11px 0; text-align:center; font-size:.88rem; font-weight:500; cursor:pointer; border:none; background:white; color:#6b8899; transition:background .18s,color .18s; }
+        .method-tab.active { background:#1a7a8a; color:white; }
+        .method-tab:first-child { border-right:1.5px solid #cde8f0; }
+
+        /* Panels */
+        .panel { display:none; }
+        .panel.active { display:block; }
+
+        /* Steps */
+        .steps { display:flex; flex-direction:column; gap:20px; }
+        .step { display:flex; gap:13px; align-items:flex-start; }
+        .step-num { flex-shrink:0; width:26px; height:26px; border-radius:50%; background:#1a7a8a; color:white; font-size:.78rem; font-weight:600; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+        .step-body strong { display:block; font-size:.88rem; color:#1a3a55; margin-bottom:3px; }
+        .step-body p { font-size:.81rem; color:#6b8899; margin:0; line-height:1.5; }
+
+        /* QR */
+        .qr-wrap { display:flex; justify-content:center; margin:10px 0 4px; }
+        .qr-wrap img { width:170px; height:170px; border:5px solid white; border-radius:10px; box-shadow:0 4px 18px rgba(26,122,138,0.16); }
+        .manual-toggle { text-align:center; margin-top:6px; }
+        .manual-toggle button { background:none; border:none; color:#1a7a8a; font-size:.78rem; cursor:pointer; text-decoration:underline; padding:0; }
+        .manual-key { display:none; background:#f0fafc; border:1.5px solid #5dd1e3; border-radius:9px; padding:10px 14px; font-family:monospace; font-size:.95rem; letter-spacing:.12em; color:#1a7a8a; text-align:center; margin-top:8px; word-break:break-all; }
+        .manual-key.visible { display:block; }
+
+        /* Inputs */
+        .otp-row { display:flex; gap:9px; margin-top:8px; }
+        input[type="text"] { flex:1; padding:11px 14px; border:1.5px solid #cde8f0; border-radius:8px; font-size:1.3rem; letter-spacing:.3em; color:#1a3a55; text-align:center; outline:none; transition:border-color .2s; }
+        input[type="text"]:focus { border-color:#1a7a8a; }
+        .btn { padding:11px 20px; background:#1a7a8a; color:white; border:none; border-radius:8px; font-size:.92rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:background .2s; }
+        .btn:hover { background:#145f6e; }
+        .btn-outline { background:white; color:#1a7a8a; border:1.5px solid #1a7a8a; }
+        .btn-outline:hover { background:#f0fafc; }
+        .btn-full { width:100%; margin-top:10px; padding:13px; font-size:.95rem; }
+
+        /* Email sent state */
+        .email-sent-notice { background:#f0fafc; border:1.5px solid #5dd1e3; border-radius:9px; padding:12px 16px; font-size:.83rem; color:#1a7a8a; margin-top:8px; display:flex; align-items:center; gap:8px; }
+        .email-sent-notice .icon { font-size:1.2rem; }
+
+        .error { color:#c0392b; font-size:.82rem; margin-top:7px; }
+        .skip { display:block; text-align:center; margin-top:22px; font-size:.8rem; color:#6b8899; }
+        .skip a { color:#1a7a8a; text-decoration:none; border-bottom:1px solid #1a7a8a; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>Secure your account</h1>
+    <p class="sub">Choose how you'd like to verify your identity each time you log in.</p>
+
+    <!-- Method selector -->
+    <div class="method-tabs">
+        <button class="method-tab {% if not email_sent %}active{% endif %}" onclick="switchTab('totp', this)">
+             Authenticator App
+        </button>
+        <button class="method-tab {% if email_sent %}active{% endif %}" onclick="switchTab('email', this)">
+             Email Code
+        </button>
+    </div>
+
+    <!-- TOTP panel -->
+    <div class="panel {% if not email_sent %}active{% endif %}" id="panel-totp">
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Get an authenticator app</strong>
+                    <p>Download <b>Google Authenticator</b>  on your phone if you don't have one.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Scan this QR code</strong>
+                    <p>Open the app, tap <em>Add account</em>, then scan the code below.</p>
+                    <div class="qr-wrap">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="TOTP QR code">
+                    </div>
+                    <div class="manual-toggle">
+                        <button type="button" onclick="toggleKey(this)">Can't scan? Enter key manually</button>
+                        <div class="manual-key" id="manualKey">{{ short_key }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <strong>Enter the 6-digit code from the app</strong>
+                    <form method="post" action="{% url '2fa_setup' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="method" value="totp_verify">
+                        <div class="otp-row">
+                            <input type="text" name="otp_code" maxlength="6"
+                                   placeholder="000000" autocomplete="one-time-code"
+                                   inputmode="numeric" required>
+                            <button type="submit" class="btn">Verify →</button>
+                        </div>
+                        {% if totp_error %}<p class="error">{{ totp_error }}</p>{% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email panel  -->
+    <div class="panel {% if email_sent %}active{% endif %}" id="panel-email">
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Send a code to your email</strong>
+                    <p>We'll send a 6-digit code to <b>{{ request.user.email|default:"your email address" }}</b> each time you log in.</p>
+                    {% if not email_sent %}
+                    <form method="post" action="{% url '2fa_setup' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="method" value="email_send">
+                        <button type="submit" class="btn btn-full">Send verification code →</button>
+                    </form>
+                    {% else %}
+                    <div class="email-sent-notice">
+                        <span class="icon">✉️</span>
+                        Code sent to <b>{{ email_address }}</b> - check your inbox.
+                    </div>
+                    {% endif %}
+                    {% if email_error %}<p class="error">{{ email_error }}</p>{% endif %}
+                </div>
+            </div>
+
+            {% if email_sent %}
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Enter the code from your email</strong>
+                    <form method="post" action="{% url '2fa_setup' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="method" value="email_verify">
+                        <div class="otp-row">
+                            <input type="text" name="email_code" maxlength="6"
+                                   placeholder="000000" autocomplete="one-time-code"
+                                   inputmode="numeric" autofocus required>
+                            <button type="submit" class="btn">Verify →</button>
+                        </div>
+                        {% if email_error %}<p class="error">{{ email_error }}</p>{% endif %}
+                    </form>
+                    <form method="post" action="{% url '2fa_setup' %}" style="margin-top:8px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="method" value="email_send">
+                        <button type="submit" class="btn btn-outline" style="width:100%;padding:9px;">Resend code</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <span class="skip">Not now? <a href="{% url 'bear_estate_homepage' %}">Skip for now</a>: you can enable this later in account settings.</span>
+</div>
+
+<script>
+    function switchTab(name, btn) {
+        document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + name).classList.add('active');
+    }
+    function toggleKey(btn) {
+        const box = document.getElementById('manualKey');
+        box.classList.toggle('visible');
+        btn.textContent = box.classList.contains('visible') ? 'Hide manual key' : "Can't scan? Enter key manually";
+    }
+</script>
+</body>
+</html>

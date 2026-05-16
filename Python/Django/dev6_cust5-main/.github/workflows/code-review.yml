@@ -1,0 +1,90 @@
+#give the workflow a readable name in the GitHub Actions tab
+name: AI Code Review
+
+#run this workflow on every push and on pull request updates
+on:
+  push:
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+#allow the workflow to read the repo and write pull request comments
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai_code_review:
+    #use a GitHub-hosted Ubuntu runner
+    runs-on: ubuntu-latest
+
+    steps:
+      #check out the full repository history so git diff works correctly
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      #install Python on the runner
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      #install the OpenAI library used by the review script
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai
+          pip install -r requirements.txt
+
+      #build the diff against the base branch when this runs on a pull request
+      - name: Build pull request diff
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          git diff --unified=3 "origin/${{ github.event.pull_request.base.ref }}...HEAD" > diff.txt
+
+      #build the diff against the previous pushed commit when this runs on a push
+      - name: Build push diff
+        if: github.event_name == 'push'
+        run: |
+          if [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            EMPTY_TREE=$(git hash-object -t tree /dev/null)
+            git diff --unified=3 "$EMPTY_TREE" "${{ github.sha }}" > diff.txt
+          else
+            git diff --unified=3 "${{ github.event.before }}" "${{ github.sha }}" > diff.txt
+          fi
+
+      #make sure the diff file is never empty so the review script always has input
+      - name: Ensure diff file exists
+        run: |
+          if [ ! -s diff.txt ]; then
+            echo "No changes detected." > diff.txt
+          fi
+
+      #run the Python review script using the GitHub secret API key
+      - name: Run AI code review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-5.1-codex-mini
+        run: |
+          python ai-code-review.py
+
+      #upload the generated markdown feedback as a workflow artifact
+      - name: Upload feedback artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-code-review-feedback
+          path: feedback.md
+
+      #post the generated feedback onto the pull request as a comment only for pull request runs
+      - name: Comment on pull request
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          file-path: feedback.md
+          comment-tag: ai-code-review
