@@ -1,0 +1,70 @@
+{% extends "bookings/base.html" %}
+{% block title %}<title>Cinemade - Account</title>{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'bookings/account.css' %}"/>
+{% endblock %}
+
+{% block content %}
+<h1>Account</h1>
+
+<div class="account-layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+        <div class="sidebar-user">
+            <div class="avatar">{{ request.user.username|first|upper }}</div>
+            <span>{{ request.user.username }}</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="?tab=bookings" class="sidebar-link {% if tab == 'bookings' or not tab %}active{% endif %}">
+                All Bookings
+            </a>
+            <a href="?tab=settings" class="sidebar-link {% if tab == 'settings' %}active{% endif %}">
+                Settings
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="account-main">
+
+        <!-- ALL BOOKINGS -->
+        {% if tab == 'bookings' or not tab %}
+        <section>
+            <h2>All Bookings</h2>
+            <booking-list>
+                {% for booking in current_bookings %}
+                <booking-row>
+                    {% if booking.movie.poster %}
+                        <img src="{{ booking.movie.poster.url }}" alt="{{ booking.movie.title }}">
+                    {% else %}
+                        <booking-poster class="p{{ forloop.counter|divisibleby:6|yesno:'6,'}}{%cycle 'p1' 'p2' 'p3' 'p4' 'p5' 'p6' %}"></booking-poster>
+                    {% endif %}
+                    <booking-info>
+                        <h3>{{ booking.movie.title }}</h3>
+                        <p>Seat {{ booking.seat.number }}&nbsp;·&nbsp;{{ booking.booking_date }}</p>
+                    </booking-info>
+                    <a class="cancel-btn" href="{% url 'cancel_booking' booking.id %}">Cancel</a>
+                </booking-row>
+                {% empty %}
+                <p class="empty-msg">No bookings.</p>
+                {% endfor %}
+            </booking-list>
+        </section>
+
+        <!-- SETTINGS -->
+        {% elif tab == 'settings' %}
+        <section>
+            <h2>Settings</h2>
+            <div class="settings-card">
+                <p><strong>Username:</strong> {{ request.user.username }}</p>
+                <a class="cancel-btn" href="{% url 'logout' %}">Logout</a>
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+</div>
+{% endblock %}

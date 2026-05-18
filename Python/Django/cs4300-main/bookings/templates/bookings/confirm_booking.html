@@ -1,0 +1,27 @@
+{% extends "bookings/base.html" %}
+{% block title %}<title>Cinemade - Confirm Booking</title>{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'bookings/book_seat.css' %}"/>
+{% endblock %}
+
+{% block content %}
+<div class="booking-header">
+    <a class="back-btn" href="{% url 'book_seat' movie.title %}">← Back</a>
+    <h1>Confirm Booking</h1>
+</div>
+
+<div class="confirm-card">
+    <p><strong>Movie:</strong> {{ movie.title }}</p>
+    <p><strong>Seat:</strong> {{ seat.number }}</p>
+    <p><strong>Date:</strong> {{ selected_date }}</p>
+    <p><strong>User:</strong> {{ request.user.username }}</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="selected_date" value="{{ selected_date }}">
+        <a class="back-btn" href="{% url 'book_seat' movie.title %}">Cancel</a>
+        <button type="submit" class="confirm-btn">Confirm</button>
+    </form>
+</div>
+{% endblock %}

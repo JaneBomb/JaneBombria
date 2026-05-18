@@ -1,0 +1,94 @@
+h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 1.2em 0 0.6em;
+    color: #1a1a1a;
+}
+
+movie-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 2px solid #ff815b;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+movie-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #ffe8e3;
+    transition: background 0.15s;
+}
+
+movie-row:last-child {
+    border-bottom: none;
+}
+
+movie-row:hover {
+    background: #fff5f3;
+}
+
+/* Poster thumbnail */
+movie-row img,
+movie-poster-placeholder {
+    display: block;
+    flex-shrink: 0;
+    width: 48px;
+    height: 68px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.p1 { background: linear-gradient(160deg, #ffb3a0, #ff6644); }
+.p2 { background: linear-gradient(160deg, #ffd580, #ff9955); }
+.p3 { background: linear-gradient(160deg, #ffaabb, #ff6677); }
+.p4 { background: linear-gradient(160deg, #aaddff, #5599ff); }
+.p5 { background: linear-gradient(160deg, #bbffcc, #44bb77); }
+.p6 { background: linear-gradient(160deg, #ddbbff, #9955ee); }
+
+movie-info {
+    flex: 1;
+    display: block;
+    min-width: 0; /* prevents text overflow breaking layout */
+}
+
+movie-info h2 {
+    margin: 0 0 3px 0;
+    font-size: 0.97rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #1a1a1a;
+}
+
+movie-info p {
+    margin: 0;
+    font-size: 0.78em;
+    color: #888;
+}
+
+book-btn {
+    flex-shrink: 0;
+    display: inline-block;
+    padding: 0.35em 1em;
+    background: #ff815b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+book-btn:hover {
+    background: #e06040;
+}

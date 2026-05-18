@@ -1,0 +1,18 @@
+header {
+    background-color: #ff815b;
+    color: white;
+    text-align: center;
+    padding: 1em;
+}
+body {
+    background-color: #FFFFFF;
+}
+menu {
+    background-color: #ffc6bc;
+    display: inline;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5em 0;
+
+    gap: 300px;
+}

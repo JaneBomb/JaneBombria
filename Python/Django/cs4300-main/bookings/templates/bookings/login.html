@@ -1,0 +1,37 @@
+{% extends 'bookings/base.html' %}
+{% block navbar %}{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'bookings/login.css' %}"/>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+
+    <div class="login-card">
+        <div class="login-logo"><span>Log in to your account</span></div>
+        <p class="login-sub">Log in to start booking</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password">
+            </div>
+            {% if error %}
+            <p class="login-error">{{ error }}</p>
+            {% endif %}
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+
+        <p class="login-footer">
+            Don't have an account? <a href="{% url 'register' %}">Register</a>
+        </p>
+    </div>
+
+</div>
+{% endblock %}

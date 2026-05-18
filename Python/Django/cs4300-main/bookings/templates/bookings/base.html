@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  {% block title %}<title>Cinemaid - Home</title> {% endblock %}
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'bookings/styles.css' %}"/>
+
+  <!-- Extra block for extra css files for children -->
+  {% block extra_css %} {% endblock %}
+</head>
+
+<!-- Will be inherited/extended by children templates-->
+    <body>
+        
+    <!-- NAVIGATION BAR -->
+     <!-- Consists of the name of the site and a profile/login -->
+    <nav>
+        
+        <a class="logo" href="{% url 'bookings' %}">Cinem<span>aid</span></a>
+        <div class="nav-right">
+            <!-- If the user is logged in -->
+            {% if request.user.is_authenticated %}
+                <span class="username">{{ request.user.username }}</span>
+                <a href="{% url 'account' %}" class="profile-btn" title="Account">
+                    <!-- person icon -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="profile-btn" title="Login">
+                    <!-- person icon -->
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+    <!-- BOOK BANNER -->
+    <div class="book-banner">
+        {% block button %}
+        <a href="{% url 'movies' %}">All Movies</a>
+        {% endblock %}
+    </div>
+
+<!-- Starting body of page -->
+ <!-- Will be overridden in children templates -->
+{% block content %}
+    <!-- MAIN -->
+    <main>
+        <div class="section-header">
+        <h2 class="section-title">Current Showings</h2>
+        </div>
+
+        <div class="movies-grid">
+
+        {% for movie in movies %}
+        <!-- Displays all movies in the database -->
+        <a class="movie-card" href="{% url 'book_seat' movie.title %}">
+            <div class="poster-placeholder">🎬</div>
+            <div class="movie-info">
+            <div class="movie-title">{{ movie.title }}</div>
+            <div class="movie-meta">{{ movie.release_date }}</div>
+            <div class="movie-meta">{{ movie.duration }}</div>
+            <span class="book-btn">Book Seat</span>
+            </div>
+        </a>
+        {% endfor %}
+        </div>
+    </main>
+{% endblock %}
+    </body>
+</html>

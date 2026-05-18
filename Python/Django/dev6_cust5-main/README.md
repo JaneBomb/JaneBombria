@@ -15,7 +15,7 @@ With the cooperation of a team of 5 and feedback from a customer group, this pro
 ### 2. Traverse to the correct directory on the local machine  
 #### Windows
 ``` bash
-cd 
+cd %USERPROFILE%\JaneBombria\Python\Django\dev_cust5-main
 ```
 #### Mac/Linux
 ```bash
@@ -36,6 +36,6 @@ cd myproject
 python3 manage.py runserver
 ```
 ### 6. Open link in a broswer
-``` bash
-
+``` text
+http://127.0.0.1:8000/
 ```

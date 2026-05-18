@@ -1,0 +1,40 @@
+{% extends "bookings/base.html" %}
+{% block title %}<title>Cinemaid - Movies</title>{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'bookings/movie.css' %}"/>
+{% endblock %}
+
+{% block content %}
+<h1>Now Showing</h1>
+
+<movie-list>
+    <!-- Loop through movies in database and display them -->
+    {% for movie in movies %}
+    <movie-row>
+        {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
+        {% else %}
+            <movie-poster-placeholder class="{% cycle 'p1' 'p2' 'p3' 'p4' 'p5' 'p6' %}"></movie-poster-placeholder>
+        {% endif %}
+        <movie-info>
+            <h2>{{ movie.title }}</h2>
+            <p>{{ movie.release_date }}&nbsp;·&nbsp;{{ movie.duration }}</p>
+        </movie-info>
+        <book-btn onclick="window.location='{% url 'book_seat' movie.title %}'">Book</book-btn>
+    </movie-row>
+    {% empty %}
+    {% for i in "123456" %}
+    <movie-row>
+        <movie-poster-placeholder class="p{{ forloop.counter }}"></movie-poster-placeholder>
+        <movie-info>
+            <h2>Movie Title</h2>
+            <p>Genre&nbsp;·&nbsp;Duration</p>
+        </movie-info>
+        <book-btn>Book</book-btn>
+    </movie-row>
+    {% endfor %}
+    {% endfor %}
+</movie-list>
+
+{% endblock %}

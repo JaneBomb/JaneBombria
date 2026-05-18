@@ -1,0 +1,101 @@
+{% extends "bookings/base.html" %}
+{% block title %}<title>Cinemade - Book a Seat</title>{% endblock %}
+{% block extra_css %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'bookings/book_seat.css' %}"/>
+{% endblock %}
+
+<!-- Overwritten content -->
+{% block content %}
+
+<div class="booking-header">
+    <a class="back-btn" href="{% url 'movies' %}">← Back</a>
+    <h1>{{ movie.title }}</h1>
+</div>
+
+<!-- Date navigation -->
+ <!-- Ensures different seat bookings for different dates -->
+<div class="date-nav">
+    <form method="GET">
+        <input type="hidden" name="date" value="{{ prev_date }}">
+        <button class="date-arrow" type="submit">&#8249;</button>
+    </form>
+
+    <span class="date-label">{{ selected_date }}</span>
+
+    <form method="GET">
+        <input type="hidden" name="date" value="{{ next_date }}">
+        <button class="date-arrow" type="submit">&#8250;</button>
+    </form>
+</div>
+
+<!-- Seating grid display -->
+<div class="screen-label">SCREEN</div>
+<div class="seat-grid">
+    {% for seat in seats %}
+        <!-- Checks if a seat is taken for that movie and date -->
+        {% if seat.id in booked_seats %}
+            <button class="seat unavailable" disabled>
+                {{ seat.seat_number }}
+            </button>
+        {% else %}
+            <a class="seat available"
+               href="{% url 'confirmation' movie.title seat.id %}?date={{ selected_date }}">
+                {{ seat.seat_number }}
+            </a>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Seat legend underneath grid-->
+<div class="legend">
+    <div class="legend-item"><span class="legend-swatch available"></span> Available</div>
+    <div class="legend-item"><span class="legend-swatch unavailable"></span> Taken</div>
+</div>
+
+<!-- Shows movie details -->
+<div>
+    <div class="movie-info">
+        <h3>Description: </h3><p>{{ movie.description }}</p>
+        <h3>Release Date:</h3> <p>{{movie.release_date}}</p>
+        <h3>Duration:</h3> <p>{{movie.duration}}</p>
+    </div>
+</div>
+
+<script>
+    // Date navigator
+    const display = document.getElementById('date-display');
+    const input = document.getElementById('selected-date-input');
+    let current = new Date();
+
+    function fmt(d) {
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function update() {
+        display.textContent = fmt(current);
+        input.value = current.toISOString().split('T')[0];
+    }
+
+    document.getElementById('prev-date').addEventListener('click', () => {
+        current.setDate(current.getDate() - 1);
+        update();
+    });
+
+    document.getElementById('next-date').addEventListener('click', () => {
+        current.setDate(current.getDate() + 1);
+        update();
+    });
+
+    update();
+
+    // Highlight selected seat on click (visual only before form submits)
+    document.querySelectorAll('.seat.available').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+</script>
+
+{% endblock %}
