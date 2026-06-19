@@ -12,3 +12,8 @@ Java in Eclipse
 Summary: Generic class that emulates a stack.
 
 For this next Java assignment, I was tasked with creating a generic class that emulates the stack data structure. As a generic, this means it is not limited to a specific data type and is more dynamic. After creating a new stack object, I then needed to properly traverse and manipulate the stack.
+
+-------------------------------------------------------------------------------
+## How to Run Either File
+### 1. Open desired file in chosen IDE
+### 2. Run the program and follow project prompts in output

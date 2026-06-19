@@ -54,7 +54,7 @@ public class Ship : MonoBehaviour
 
         // shoot bullets
         Vector2 shipPosition = gameObject.transform.position;
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             // play sound
             AudioManager.Play(AudioClipName.PlayerShot);
